@@ -3,7 +3,7 @@ std = "max"
 ignore = {
     -- Allow access to undefined globals or their fields. In the future we'll
     -- define all of CC's globals within this file
-    '113', '143',
+    -- '113', '143',
 
     -- FIXME: Ignore unused arguments and loop variables
     '212', '213',
