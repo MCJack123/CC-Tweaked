@@ -34,6 +34,7 @@ shell.setAlias( "rm", "delete" )
 shell.setAlias( "clr", "clear" )
 shell.setAlias( "rs", "redstone" )
 shell.setAlias( "sh", "shell" )
+shell.setAlias( "umount", "unmount" )
 if term.isColor() then
     shell.setAlias( "background", "bg" )
     shell.setAlias( "foreground", "fg" )
@@ -67,7 +68,7 @@ shell.setCompletionFunction( "rom/programs/label.lua", completion.build(
 shell.setCompletionFunction( "rom/programs/list.lua", completion.build(completion.dir) )
 shell.setCompletionFunction( "rom/programs/mkdir.lua", completion.build({ completion.dir, many = true }) )
 shell.setCompletionFunction( "rom/programs/monitor.lua", completion.build(
-    { completion.peripheral, true },
+    { completion.choice, { "resolution", table.unpack( peripheral.getNames() ) }, true },
     completion.program
 ) )
 shell.setCompletionFunction( "rom/programs/move.lua", completion.build(
@@ -99,6 +100,8 @@ shell.setCompletionFunction( "rom/programs/http/pastebin.lua", completion.build(
 shell.setCompletionFunction( "rom/programs/rednet/chat.lua", completion.build({ completion.choice, { "host ", "join " } }) )
 shell.setCompletionFunction( "rom/programs/command/exec.lua", completion.build(completion.command) )
 shell.setCompletionFunction( "rom/programs/http/wget.lua", completion.build({ completion.choice, { "run " } }) )
+shell.setCompletionFunction( "rom/programs/unmount.lua", completion.build(completion.dir) )
+shell.setCompletionFunction( "rom/programs/fun/advanced/bmpview.lua", completion.build(completion.file) )
 
 if turtle then
     shell.setCompletionFunction( "rom/programs/turtle/go.lua", completion.build(

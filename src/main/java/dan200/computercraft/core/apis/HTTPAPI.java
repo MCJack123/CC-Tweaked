@@ -12,6 +12,7 @@ import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.core.apis.http.*;
 import dan200.computercraft.core.apis.http.request.HttpRequest;
+import dan200.computercraft.core.apis.http.HTTPServer;
 import dan200.computercraft.core.apis.http.websocket.Websocket;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -29,6 +30,7 @@ import static dan200.computercraft.core.apis.TableHelper.*;
 public class HTTPAPI implements ILuaAPI
 {
     private final IAPIEnvironment m_apiEnvironment;
+    private HTTPServer server;
 
     private final ResourceGroup<CheckUrl> checkUrls = new ResourceGroup<>();
     private final ResourceGroup<HttpRequest> requests = new ResourceQueue<>( () -> ComputerCraft.httpMaxRequests );
@@ -51,6 +53,7 @@ public class HTTPAPI implements ILuaAPI
         checkUrls.startup();
         requests.startup();
         websockets.startup();
+        server = new HTTPServer(m_apiEnvironment);
     }
 
     @Override
@@ -59,6 +62,7 @@ public class HTTPAPI implements ILuaAPI
         checkUrls.shutdown();
         requests.shutdown();
         websockets.shutdown();
+        server = null;
     }
 
     @Override
@@ -77,6 +81,8 @@ public class HTTPAPI implements ILuaAPI
             "request",
             "checkURL",
             "websocket",
+            "addListener",
+            "removeListener"
         };
     }
 
@@ -195,6 +201,17 @@ public class HTTPAPI implements ILuaAPI
                 {
                     return new Object[] { false, e.getMessage() };
                 }
+            }
+            case 3:
+            {
+                // addListener(port)
+                server.listen(getInt(args, 0));
+                return null;
+            }
+            case 4:
+            {
+                server.stop(getInt(args, 0));
+                return null;
             }
             default:
                 return null;

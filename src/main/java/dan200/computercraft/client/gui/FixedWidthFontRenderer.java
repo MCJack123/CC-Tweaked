@@ -91,6 +91,27 @@ public final class FixedWidthFontRenderer
         renderer.pos( x + width, y + FONT_HEIGHT, 0.0 ).color( r, g, b, 1.0f ).endVertex();
     }
 
+     public void drawRect( BufferBuilder renderer, double x, double y, int color, int width, int height, Palette p, boolean greyscale )
+    {
+        double[] colour = p.getColour( 15 - color );
+        if(greyscale)
+        {
+            greyscaleify( colour );
+        }
+        float r = (float)colour[0];
+        float g = (float)colour[1];
+        float b = (float)colour[2];
+
+        renderer.pos( x, y, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+        renderer.pos( x, y + height, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+        renderer.pos( x + width, y, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+        renderer.pos( x + width, y, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+        renderer.pos( x, y + height, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+        renderer.pos( x + width, y + height, 0.0 ).color( r, g, b, 1.0f ).endVertex();
+    }
+
+
+
     private boolean isGreyScale( int colour )
     {
         return colour == 0 || colour == 15 || colour == 7 || colour == 8;

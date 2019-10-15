@@ -473,6 +473,14 @@ else
         shell.run( "/rom/startup.lua" )
     end
 
+    -- Read in history
+    local tCommandHistory = {}
+    if settings.get("shell.store_history") and fs.exists("/.history") then
+        local file = fs.open("/.history", "r")
+        tCommandHistory = textutils.unserialize(file.readAll())
+        file.close()
+    end
+
     -- Read commands and execute them
     local tCommandHistory = {}
     while not bExit do
@@ -493,5 +501,12 @@ else
             table.insert( tCommandHistory, sLine )
         end
         shell.run( sLine )
+        if term.getGraphicsMode() then term.setGraphicsMode(false) end
+    end
+
+    if settings.get("shell.store_history") then
+        local file = fs.open("/.history", "w")
+        file.write(textutils.serialize(tCommandHistory))
+        file.close()
     end
 end

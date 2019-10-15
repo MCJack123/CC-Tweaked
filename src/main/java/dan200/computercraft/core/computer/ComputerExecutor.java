@@ -375,6 +375,7 @@ final class ComputerExecutor
             displayFailure( "Cannot mount computer system", null );
             return null;
         }
+        apis.add( new MountAPI( filesystem ) );
     }
 
     private ILuaMachine createLuaMachine()

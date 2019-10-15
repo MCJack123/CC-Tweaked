@@ -785,6 +785,25 @@ if http then
             end
         end
     end
+
+    http.listen = function( _port, _callback )
+        if type( _port ) ~= "number" then
+            error( "bad argument #1 (expected number, got " .. type( _port ) .. ")", 2 )
+        end
+        if type( _callback ) ~= "function" then
+            error( "bad argument #2 (expected function, got " .. type( _callback ) .. ")", 2)
+        end
+        http.addListener( _port )
+        while true do
+            local ev, p1, p2, p3 = os.pullEvent()
+            if ev == "server_stop" then
+                http.removeListener( _port )
+                break
+            elseif ev == "http_request" and p1 == _port then
+                _callback( p2, p3 )
+            end
+        end
+    end
 end
 
 -- Install the lua part of the FS api
@@ -935,6 +954,7 @@ end
 settings.set( "shell.allow_startup", true )
 settings.set( "shell.allow_disk_startup", (commands == nil) )
 settings.set( "shell.autocomplete", true )
+settings.set( "shell.store_history", true )
 settings.set( "edit.autocomplete", true )
 settings.set( "edit.default_extension", "lua" )
 settings.set( "paint.default_extension", "nfp" )

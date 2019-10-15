@@ -135,9 +135,11 @@ public class FileMount implements IWritableMount
     private File m_rootPath;
     private long m_capacity;
     private long m_usedSpace;
+    private boolean m_noMeasure;
 
-    public FileMount( File rootPath, long capacity )
+    public FileMount( File rootPath, long capacity, boolean noMeasure = false )
     {
+        m_noMeasure = noMeasure;
         m_rootPath = rootPath;
         m_capacity = capacity + MINIMUM_FILE_SIZE;
         m_usedSpace = created() ? measureUsedSpace( m_rootPath ) : MINIMUM_FILE_SIZE;
@@ -386,6 +388,7 @@ public class FileMount implements IWritableMount
     private static long measureUsedSpace( File file )
     {
         if( !file.exists() ) return 0;
+        if( m_noMeasure ) return MINIMUM_FILE_SIZE;
 
         if( file.isDirectory() )
         {

@@ -11,9 +11,11 @@ import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.core.computer.IComputerEnvironment;
 import dan200.computercraft.core.terminal.Terminal;
+import dan200.computercraft.shared.computer.core.IComputer;
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
 import org.apache.commons.lang3.ArrayUtils;
+import org.luaj.vm2.Lua;
 
 import javax.annotation.Nonnull;
 
@@ -23,11 +25,14 @@ public class TermAPI implements ILuaAPI
 {
     private final Terminal m_terminal;
     private final IComputerEnvironment m_environment;
+    private final IAPIEnvironment m_apienv;
+    public static IAPIEnvironment lastSelf = null;
 
     public TermAPI( IAPIEnvironment environment )
     {
         m_terminal = environment.getTerminal();
         m_environment = environment.getComputerEnvironment();
+        m_apienv = _environment;
     }
 
     @Override
@@ -67,6 +72,10 @@ public class TermAPI implements ILuaAPI
             "nativePaletteColour",
             "nativePaletteColor",
             "getCursorBlink",
+            "setGraphicsMode",
+            "getGraphicsMode",
+            "setPixel",
+            "getPixel",
         };
     }
 
@@ -279,6 +288,56 @@ public class TermAPI implements ILuaAPI
             case 25:
                 // getCursorBlink
                 return new Object[] { m_terminal.getCursorBlink() };
+            case 26:
+            {
+                // setGraphicsMode
+                if (!m_environment.isColour()) throw new LuaException("Graphics mode requires advanced computer");
+                synchronized (m_terminal) {
+                    m_terminal.clear();
+                    boolean arg = getBoolean(args, 0);
+                    m_terminal.setGraphicsMode(arg);
+                    if (m_terminal.getGraphicsMode() != arg) throw new LuaException("Failed to set graphics mode!");
+                    m_terminal.setCursorPos(1, 1);
+                    lastSelf = m_apienv;
+                }
+                return null;
+            }
+            case 27:
+            {
+                // getGraphicsMode
+                return new Object[] { m_terminal.getGraphicsMode() };
+            }
+            case 28:
+            {
+                // setPixel
+                if (!m_environment.isColour()) throw new LuaException("Graphics mode requires advanced computer");
+                synchronized (m_terminal) {
+                    int colour = getInt( args, 2 );
+                    if( colour <= 0 )
+                    {
+                        throw new LuaException( "Colour out of range" );
+                    }
+                    colour = getHighestBit( colour ) - 1;
+                    if( colour < 0 || colour > 15 )
+                    {
+                        throw new LuaException( "Colour out of range" );
+                    }
+                    int x = getInt(args, 0);
+                    int y = getInt(args, 1);
+                    if (x >= m_terminal.getWidth() * 6 || y >= m_terminal.getHeight() * 9 || x < 0 || y < 0)
+                        throw new LuaException("Position " + x + ", " + y + " out of bounds");
+                    m_terminal.setPixel(x, y, (char)colour);
+                }
+                return null;
+            }
+            case 29:
+            {
+                // getPixel
+                if (!m_environment.isColour()) throw new LuaException("Graphics mode requires advanced computer");
+                synchronized (m_terminal) {
+                    return encodeColour(m_terminal.getPixel(getInt(args, 0), getInt(args, 1)));
+                }
+            }
             default:
                 return null;
         }
