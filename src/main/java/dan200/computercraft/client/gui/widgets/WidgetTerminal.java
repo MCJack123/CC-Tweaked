@@ -8,8 +8,6 @@ package dan200.computercraft.client.gui.widgets;
 
 import dan200.computercraft.client.FrameInfo;
 import dan200.computercraft.client.gui.FixedWidthFontRenderer;
-import dan200.computercraft.core.apis.TermAPI;
-import dan200.computercraft.core.computer.Computer;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.computer.core.IComputer;
@@ -23,7 +21,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ChatAllowedCharacters;
-import org.apache.logging.log4j.Level;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -176,10 +173,10 @@ public class WidgetTerminal extends Widget
                     {
                         int gfxmode = computer.getTerminal().getGraphicsMode() ? 0 : 1;
                         int gfxmoden = computer.getTerminal().getGraphicsMode() ? 1 : 0;
-                        int charX = ( mouseX - (getXPosition() + m_leftMargin)) / (int)Math.pow(FixedWidthFontRenderer.FONT_WIDTH, gfxmode);
-                        int charY = ( mouseY - (getYPosition() + m_topMargin)) / (int)Math.pow(FixedWidthFontRenderer.FONT_HEIGHT, gfxmode);
-                        charX = Math.min( Math.max( charX, 0 ), (term.getWidth() * (int)Math.pow(FixedWidthFontRenderer.FONT_WIDTH, gfxmoden)) - 1 );
-                        charY = Math.min( Math.max( charY, 0 ), (term.getHeight() * (int)Math.pow(FixedWidthFontRenderer.FONT_HEIGHT, gfxmoden)) - 1 );
+                        int charX = (mouseX - (getXPosition() + m_leftMargin)) / (int)Math.pow( FixedWidthFontRenderer.FONT_WIDTH, gfxmode );
+                        int charY = (mouseY - (getYPosition() + m_topMargin)) / (int)Math.pow( FixedWidthFontRenderer.FONT_HEIGHT, gfxmode );
+                        charX = Math.min( Math.max( charX, 0 ), (term.getWidth() * (int)Math.pow( FixedWidthFontRenderer.FONT_WIDTH, gfxmoden )) - 1 );
+                        charY = Math.min( Math.max( charY, 0 ), (term.getHeight() * (int)Math.pow( FixedWidthFontRenderer.FONT_HEIGHT, gfxmoden )) - 1 );
 
                         computer.mouseClick( button + 1, charX + 1, charY + 1 );
 
@@ -233,12 +230,12 @@ public class WidgetTerminal extends Widget
             Terminal term = computer.getTerminal();
             if( term != null )
             {
-                                int gfxmode = computer.getTerminal().getGraphicsMode() ? 0 : 1;
+                int gfxmode = computer.getTerminal().getGraphicsMode() ? 0 : 1;
                 int gfxmoden = computer.getTerminal().getGraphicsMode() ? 1 : 0;
-                int charX = ( mouseX - (getXPosition() + m_leftMargin)) / (int)Math.pow(FixedWidthFontRenderer.FONT_WIDTH, gfxmode);
-                int charY = ( mouseY - (getYPosition() + m_topMargin)) / (int)Math.pow(FixedWidthFontRenderer.FONT_HEIGHT, gfxmode);
-                charX = Math.min( Math.max( charX, 0 ), (term.getWidth() * (int)Math.pow(FixedWidthFontRenderer.FONT_WIDTH, gfxmoden)) - 1 );
-                charY = Math.min( Math.max( charY, 0 ), (term.getHeight() * (int)Math.pow(FixedWidthFontRenderer.FONT_HEIGHT, gfxmoden)) - 1 );
+                int charX = (mouseX - (getXPosition() + m_leftMargin)) / (int)Math.pow( FixedWidthFontRenderer.FONT_WIDTH, gfxmode );
+                int charY = (mouseY - (getYPosition() + m_topMargin)) / (int)Math.pow( FixedWidthFontRenderer.FONT_HEIGHT, gfxmode );
+                charX = Math.min( Math.max( charX, 0 ), (term.getWidth() * (int)Math.pow( FixedWidthFontRenderer.FONT_WIDTH, gfxmoden )) - 1 );
+                charY = Math.min( Math.max( charY, 0 ), (term.getHeight() * (int)Math.pow( FixedWidthFontRenderer.FONT_HEIGHT, gfxmoden )) - 1 );
 
                 if( m_lastClickButton >= 0 && !Mouse.isButtonDown( m_lastClickButton ) )
                 {
@@ -368,30 +365,37 @@ public class WidgetTerminal extends Widget
                 int x = startX + m_leftMargin;
                 int y = startY + m_topMargin;
 
-                if (terminal.getGraphicsMode()) {
-                    mc.getTextureManager().bindTexture( background );
+                if( terminal.getGraphicsMode() ) 
+                {
+                    mc.getTextureManager().bindTexture( BACKGROUND );
                     // Draw a black background
                     Colour black = Colour.Black;
                     GlStateManager.color( black.getR(), black.getG(), black.getB(), 1.0f );
                     try
                     {
                         drawTexturedModalRect( startX, startY, 0, 0, getWidth(), getHeight() );
-                    } finally
+                    } 
+                    finally
                     {
                         GlStateManager.color( 1.0f, 1.0f, 1.0f, 1.0f );
                     }
                     BufferBuilder renderer = Tessellator.getInstance().getBuffer();
                     renderer.begin( GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR );
-                    for (int line = 0; line < th * 9; ++line) {
-                        TextBuffer pixels = terminal.getPixelLine(line);
-                        for (int px = 0; px < pixels.length(); px++)
-                            fontRenderer.drawRect(renderer, x + px, y, pixels.charAt(px), 1, 1, palette, greyscale);
+                    for( int line = 0; line < th * 9; ++line ) 
+                    {
+                        TextBuffer pixels = terminal.getPixelLine( line );
+                        for( int px = 0; px < pixels.length(); px++ ) 
+                        {
+                            fontRenderer.drawRect( renderer, x + px, y, pixels.charAt( px ), 1, 1, palette, greyscale );
+                        }
                         y++;
                     }
                     GlStateManager.disableTexture2D();
                     Tessellator.getInstance().draw();
                     GlStateManager.enableTexture2D();
-                } else {
+                } 
+                else 
+                {
                     // Draw margins
                     TextBuffer emptyLine = new TextBuffer( ' ', tw );
                     if( m_topMargin > 0 )
@@ -400,14 +404,15 @@ public class WidgetTerminal extends Widget
                     }
                     if( m_bottomMargin > 0 )
                     {
-                        fontRenderer.drawString( emptyLine, x, startY + 2 * m_bottomMargin + ( th - 1 ) * FixedWidthFontRenderer.FONT_HEIGHT, terminal.getTextColourLine( th - 1 ), terminal.getBackgroundColourLine( th - 1 ), m_leftMargin, m_rightMargin, greyscale, palette );
+                        fontRenderer.drawString( emptyLine, x, startY + 2 * m_bottomMargin + (th - 1) * FixedWidthFontRenderer.FONT_HEIGHT, terminal.getTextColourLine( th - 1 ), terminal.getBackgroundColourLine( th - 1 ), m_leftMargin, m_rightMargin, greyscale, palette );
                     }
                     // Draw lines
-                    for (int line = 0; line < th; ++line) {
-                        TextBuffer text = terminal.getLine(line);
-                        TextBuffer colour = terminal.getTextColourLine(line);
-                        TextBuffer backgroundColour = terminal.getBackgroundColourLine(line);
-                        fontRenderer.drawString(text, x, y, colour, backgroundColour, m_leftMargin, m_rightMargin, greyscale, palette);
+                    for( int line = 0; line < th; ++line ) 
+                    {
+                        TextBuffer text = terminal.getLine( line );
+                        TextBuffer colour = terminal.getTextColourLine( line );
+                        TextBuffer backgroundColour = terminal.getBackgroundColourLine( line );
+                        fontRenderer.drawString( text, x, y, colour, backgroundColour, m_leftMargin, m_rightMargin, greyscale, palette );
                         y += FixedWidthFontRenderer.FONT_HEIGHT;
                     }
 

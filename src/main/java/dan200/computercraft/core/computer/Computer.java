@@ -87,17 +87,13 @@ public class Computer
         return internalEnvironment;
     }
 
-    public Terminal getTerminal()
-    {
-        return m_terminal;
-    }
-
     public boolean isOn()
     {
         return executor.isOn();
     }
 
-    public boolean isOff() {
+    public boolean isOff() 
+    {
         return !executor.isOn();
     }
 

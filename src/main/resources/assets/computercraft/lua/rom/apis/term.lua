@@ -16,6 +16,10 @@ term.redirect = function( target )
     if target == term or target == _G.term then
         error( "term is not a recommended redirect target, try term.current() instead", 2 )
     end
+    target.getGraphicsMode = native.getGraphicsMode
+    target.setGraphicsMode = native.setGraphicsMode
+    target.getPixel = native.getPixel
+    target.setPixel = native.setPixel
     for k,v in pairs( native ) do
         if type( k ) == "string" and type( v ) == "function" then
             if type( target[k] ) ~= "function" then

@@ -365,6 +365,7 @@ final class ComputerExecutor
             }
 
             filesystem.mount( "rom", "rom", romMount );
+            apis.add( new MountAPI( filesystem ) );
             return filesystem;
         }
         catch( FileSystemException e )
@@ -375,7 +376,6 @@ final class ComputerExecutor
             displayFailure( "Cannot mount computer system", null );
             return null;
         }
-        apis.add( new MountAPI( filesystem ) );
     }
 
     private ILuaMachine createLuaMachine()

@@ -69,7 +69,7 @@ public class MonitorPeripheral implements IPeripheral
             "setGraphicsMode",
             "getGraphicsMode",
             "setPixel",
-            "getPixel"
+            "getPixel",
         };
     }
 
@@ -218,8 +218,8 @@ public class MonitorPeripheral implements IPeripheral
             {
                 // setGraphicsMode
                 terminal.clear();
-                terminal.setGraphicsMode(getBoolean(args, 0));
-                terminal.setCursorPos(1, 1);
+                terminal.setGraphicsMode( getBoolean( args, 0 ) );
+                terminal.setCursorPos( 1, 1 );
                 return null;
             }
             case 27:
@@ -240,17 +240,19 @@ public class MonitorPeripheral implements IPeripheral
                 {
                     throw new LuaException( "Colour out of range" );
                 }
-                int x = getInt(args, 0);
-                int y = getInt(args, 1);
-                if (x >= terminal.getWidth() * 6 || y >= terminal.getHeight() * 9 || x < 0 || y < 0)
-                    throw new LuaException("Position " + x + ", " + y + " out of bounds");
-                terminal.setPixel(x, y, (char)colour);
+                int x = getInt( args, 0 );
+                int y = getInt( args, 1 );
+                if( x >= terminal.getWidth() * 6 || y >= terminal.getHeight() * 9 || x < 0 || y < 0 )
+                {
+                    throw new LuaException( "Position " + x + ", " + y + " out of bounds" );
+                }
+                terminal.setPixel( x, y, (char)colour );
                 return null;
             }
             case 29:
             {
                 // getPixel
-                return encodeColour(terminal.getPixel(getInt(args, 0), getInt(args, 1)));
+                return encodeColour( terminal.getPixel( getInt( args, 0 ), getInt( args, 1 ) ) );
             }
             default:
                 return null;
@@ -268,9 +270,10 @@ public class MonitorPeripheral implements IPeripheral
         return bit;
     }
 
-    private static Object[] encodeColour(int colour) {
+    private static Object[] encodeColour( int colour ) 
+    {
         return new Object[] {
-                1 << colour
+            1 << colour,
         };
     }
 

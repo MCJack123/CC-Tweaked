@@ -53,7 +53,7 @@ public class HTTPAPI implements ILuaAPI
         checkUrls.startup();
         requests.startup();
         websockets.startup();
-        server = new HTTPServer(m_apiEnvironment);
+        server = new HTTPServer( m_apiEnvironment );
     }
 
     @Override
@@ -82,7 +82,7 @@ public class HTTPAPI implements ILuaAPI
             "checkURL",
             "websocket",
             "addListener",
-            "removeListener"
+            "removeListener",
         };
     }
 
@@ -205,12 +205,12 @@ public class HTTPAPI implements ILuaAPI
             case 3:
             {
                 // addListener(port)
-                server.listen(getInt(args, 0));
+                server.listen( getInt( args, 0 ) );
                 return null;
             }
             case 4:
             {
-                server.stop(getInt(args, 0));
+                server.stop( getInt( args, 0 ) );
                 return null;
             }
             default:

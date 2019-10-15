@@ -1,3 +1,9 @@
+/*
+ * This file is part of ComputerCraft - http://www.computercraft.info
+ * Copyright Daniel Ratcliffe, 2011-2019. Do not distribute without permission.
+ * Send enquiries to dratcliffe@gmail.com
+ */
+
 package dan200.computercraft.core.apis.handles;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -14,34 +20,38 @@ import java.nio.charset.StandardCharsets;
 
 import static dan200.computercraft.core.apis.ArgumentHelper.getString;
 
-public class HTTPResponseHandle extends HandleGeneric {
+public class HTTPResponseHandle extends HandleGeneric 
+{
     private final HttpExchange m_exchange;
     private final ByteArrayOutputStream m_writer;
     private int m_off = 0;
     private int m_statusCode = 200;
 
-    public HTTPResponseHandle(HttpExchange exchange, ByteArrayOutputStream os) {
-        super(new BufferedWriter(new OutputStreamWriter(os)));
+    public HTTPResponseHandle( HttpExchange exchange, ByteArrayOutputStream os ) 
+    {
+        super( new BufferedWriter( new OutputStreamWriter( os ) ) );
         m_exchange = exchange;
         m_writer = os;
     }
 
     @Nonnull
     @Override
-    public String[] getMethodNames() {
+    public String[] getMethodNames() 
+    {
         return new String[] {
             "write",
             "writeLine",
             "flush",
             "close",
             "setStatusCode",
-            "setResponseHeader"
+            "setResponseHeader",
         };
     }
 
     @Nullable
     @Override
-    public Object[] callMethod(@Nonnull ILuaContext context, int method, @Nonnull Object[] args) throws LuaException {
+    public Object[] callMethod( @Nonnull ILuaContext context, int method, @Nonnull Object[] args ) throws LuaException 
+    {
         switch( method )
         {
             case 0:
@@ -57,7 +67,7 @@ public class HTTPResponseHandle extends HandleGeneric {
                 {
                     text = "";
                 }
-                m_writer.write( text.getBytes(StandardCharsets.UTF_8), m_off, text.length() );
+                m_writer.write( text.getBytes( StandardCharsets.UTF_8 ), m_off, text.length() );
                 m_off += text.length();
                 return null;
             }
@@ -74,8 +84,8 @@ public class HTTPResponseHandle extends HandleGeneric {
                 {
                     text = "";
                 }
-                m_writer.write( text.getBytes(StandardCharsets.UTF_8), m_off, text.length() );
-                m_writer.write('\n');
+                m_writer.write( text.getBytes( StandardCharsets.UTF_8 ), m_off, text.length() );
+                m_writer.write( '\n' );
                 m_off += text.length() + 1;
                 return null;
             }
@@ -93,22 +103,25 @@ public class HTTPResponseHandle extends HandleGeneric {
                 }
             case 3:
                 // close
-                try {
-                    m_exchange.sendResponseHeaders(m_statusCode, m_writer.size());
-                    m_writer.writeTo(m_exchange.getResponseBody());
+                try 
+                {
+                    m_exchange.sendResponseHeaders( m_statusCode, m_writer.size() );
+                    m_writer.writeTo( m_exchange.getResponseBody() );
                     m_exchange.close();
-                } catch (IOException e) {
-                    throw new LuaException("Could not send data: " + e.getMessage());
+                } 
+                catch ( IOException e ) 
+                {
+                    throw new LuaException( "Could not send data: " + e.getMessage() );
                 }
                 close();
                 return null;
             case 4:
-                m_statusCode = dan200.computercraft.core.apis.ArgumentHelper.getInt(args, 0);
+                m_statusCode = dan200.computercraft.core.apis.ArgumentHelper.getInt( args, 0 );
                 return null;
             case 5:
             {
                 // setResponseHeaders
-                m_exchange.getResponseHeaders().add(getString(args, 0), getString(args, 1));
+                m_exchange.getResponseHeaders().add( getString( args, 0 ), getString( args, 1 ) );
                 return null;
             }
             default:

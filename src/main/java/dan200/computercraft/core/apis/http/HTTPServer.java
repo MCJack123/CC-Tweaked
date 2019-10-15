@@ -1,3 +1,9 @@
+/*
+ * This file is part of ComputerCraft - http://www.computercraft.info
+ * Copyright Daniel Ratcliffe, 2011-2019. Do not distribute without permission.
+ * Send enquiries to dratcliffe@gmail.com
+ */
+
 package dan200.computercraft.core.apis.http;
 
 import com.sun.net.httpserver.Headers;
@@ -6,7 +12,7 @@ import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.lua.ILuaObject;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.core.apis.IAPIEnvironment;
-import dan200.computercraft.core.apis.handles.EncodedInputHandle;
+import dan200.computercraft.core.apis.handles.EncodedReadableHandle;
 import dan200.computercraft.core.apis.handles.HTTPResponseHandle;
 
 import javax.annotation.Nonnull;
@@ -14,47 +20,62 @@ import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
-public class HTTPServer {
+public class HTTPServer 
+{
     private final IAPIEnvironment env;
     private final HashMap<Integer, HttpServer> serverList;
 
-    public HTTPServer(IAPIEnvironment e) {
+    public HTTPServer( IAPIEnvironment e ) 
+    {
         env = e;
         serverList = new HashMap<>();
     }
 
-    public void listen(int port) throws LuaException {
-        try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext("/", httpExchange -> {
-                try {
-                    ILuaObject req = wrapInputStream(new EncodedInputHandle(httpExchange.getRequestBody()), httpExchange.getRequestURI().toString(), httpExchange.getRequestMethod(), httpExchange.getRequestHeaders());
+    public void listen( int port ) throws LuaException 
+    {
+        try 
+        {
+            HttpServer server = HttpServer.create( new InetSocketAddress( port ), 0 );
+            server.createContext( "/", httpExchange -> {
+                try 
+                {
+                    ILuaObject req = wrapInputStream( new EncodedReadableHandle( new BufferedReader( new InputStreamReader( httpExchange.getRequestBody() ) ) ), httpExchange.getRequestURI().toString(), httpExchange.getRequestMethod(), httpExchange.getRequestHeaders() );
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    ILuaObject res = new HTTPResponseHandle(httpExchange, new ByteArrayOutputStream());
-                    env.queueEvent("http_request", new Object[]{port, req, res});
-                } catch (Exception e) {
+                    ILuaObject res = new HTTPResponseHandle( httpExchange, new ByteArrayOutputStream() );
+                    env.queueEvent( "http_request", new Object[]{ port, req, res } );
+                } 
+                catch ( Exception e ) 
+                {
                     e.printStackTrace();
                 }
-            });
-            server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+            } );
+            server.setExecutor( java.util.concurrent.Executors.newCachedThreadPool() );
             server.start();
-            System.out.println("Listening on " + ((Integer) port).toString());
-            serverList.put(port, server);
-        } catch (Exception e) {
-            throw new LuaException("Could not start server: " + e.getMessage());
+            System.out.println( "Listening on " + ((Integer)port).toString() );
+            serverList.put( port, server );
+        } 
+        catch ( Exception e ) 
+        {
+            throw new LuaException( "Could not start server: " + e.getMessage() );
         }
     }
 
-    public void stop(int port) throws LuaException {
-        try {
-            serverList.remove(port).stop(0);
-        } catch (Exception e) {
-            throw new LuaException("Could not stop server: " + e.getMessage());
+    public void stop( int port ) throws LuaException 
+    {
+        try 
+        {
+            serverList.remove( port ).stop( 0 );
+        } 
+        catch ( Exception e ) 
+        {
+            throw new LuaException( "Could not stop server: " + e.getMessage() );
         }
     }
 
-    private static ILuaObject wrapInputStream( final ILuaObject reader, final String url, final String _method, final Headers requestHeaders )
+    private static ILuaObject wrapInputStream( final ILuaObject reader, final String url, final String methodOrig, final Headers requestHeaders )
     {
         String[] oldMethods = reader.getMethodNames();
         final int methodOffset = oldMethods.length;
@@ -74,7 +95,7 @@ public class HTTPServer {
             }
 
             @Override
-            public Object[] callMethod(@Nonnull ILuaContext context, int method, @Nonnull Object[] args ) throws LuaException, InterruptedException
+            public Object[] callMethod( @Nonnull ILuaContext context, int method, @Nonnull Object[] args ) throws LuaException, InterruptedException
             {
                 if( method < methodOffset )
                 {
@@ -94,7 +115,7 @@ public class HTTPServer {
                     }
                     case 2:
                         // getMethod
-                        return new Object[] { _method };
+                        return new Object[] { methodOrig };
                     default:
                     {
                         return null;

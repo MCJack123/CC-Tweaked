@@ -91,10 +91,10 @@ public final class FixedWidthFontRenderer
         renderer.pos( x + width, y + FONT_HEIGHT, 0.0 ).color( r, g, b, 1.0f ).endVertex();
     }
 
-     public void drawRect( BufferBuilder renderer, double x, double y, int color, int width, int height, Palette p, boolean greyscale )
+    public void drawRect( BufferBuilder renderer, double x, double y, int color, int width, int height, Palette p, boolean greyscale )
     {
         double[] colour = p.getColour( 15 - color );
-        if(greyscale)
+        if ( greyscale )
         {
             greyscaleify( colour );
         }
