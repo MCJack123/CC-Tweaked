@@ -343,7 +343,7 @@ function shell.resolve(path)
     expect(1, path, "string")
     local sStartChar = string.sub(path, 1, 1)
     if  ((sStartChar == "/") or (sStartChar == "\\")) then
-		return fs.combine(path)
+        return fs.combine(path)
     else
         return fs.combine(progenv.pwd, path)
     end
@@ -609,7 +609,7 @@ function shell.setCompletionFunction(program, complete)
     expect(1, program, "string")
     expect(2, complete, "function")
     progenv.shell_CompletionInfo[program] =
-	{ fnComplete = complete }
+    { fnComplete = complete }
 end
 
 --- Get a table containing all completion functions.

@@ -16,8 +16,8 @@ local expect = dofile("rom/modules/main/cc/expect.lua").expect
 -- We use this weird wrapper function as we wish to preserve the varargs
 local function checkResult(handle, ...)
     if  ((...) == nil) and handle._autoclose and not handle._closed then
-	    handle:close()
-	end
+        handle:close()
+    end
     return ...
 end
 
@@ -138,8 +138,8 @@ handleMetatable = {
 
             local handle = self._handle
             if  (not handle.read and not handle.readLine) then
-			    return nil, "Not opened for reading"
-			end
+                return nil, "Not opened for reading"
+            end
 
             local n = select("#", ...)
             local output = {}
@@ -148,8 +148,8 @@ handleMetatable = {
                 local res
                 if  (type(arg) == "number") then
                     if  handle.read then
-					    res = handle.read(arg)
-					end
+                        res = handle.read(arg)
+                    end
                 elseif(type(arg) == "string") then
                     local format = arg:gsub("^%*", ""):sub(1, 1)
 
@@ -174,8 +174,8 @@ handleMetatable = {
 
             -- Default to "l" if possible
             if  ((n == 0) and handle.readLine) then
-			    return handle.readLine()
-			end
+                return handle.readLine()
+            end
             return table.unpack(output, 1, n)
         end,
 
@@ -261,8 +261,8 @@ local defaultError = make_file({
         end
         _G.write(...)
         if  term.isColour() then
-		    term.setTextColour(oldColour)
-		end
+            term.setTextColour(oldColour)
+        end
     end,
 })
 

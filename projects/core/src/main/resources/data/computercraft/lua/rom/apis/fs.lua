@@ -20,7 +20,7 @@ local function abspath(path)
         return "/"..path
     end
     
-	local progenv = os.getprogenv()
+    local progenv = os.getprogenv()
     return progenv and "/"..native.combine(progenv.pwd, path) or "/"..path
 end
 
@@ -35,7 +35,7 @@ for <fts_file> in <fts>:iter() do
     <fts_file>.name
     <fts_file>.order = "pre" | "post"  -- if directory
     <fts_file>.children                -- if directory, array of paths
-	-- set only when read (to be able to change dir and not fuckup)
+    -- set only when read (to be able to change dir and not fuckup)
     <fts_file>:skip()
     <fts_file>:again() -- both pre and post order
     --<fts>:skip(<fts_file>)
@@ -81,62 +81,62 @@ function fs.abspath(...)
 end
 
 function fs.makeDir(path)
-	return native.makeDir(abspath(path))
+    return native.makeDir(abspath(path))
 end
 
 function fs.getCapacity(path)
-	return native.getCapacity(abspath(path))
+    return native.getCapacity(abspath(path))
 end
 
 function fs.attributes(path)
-	return native.attributes(abspath(path))
+    return native.attributes(abspath(path))
 end
 
 function fs.getSize(path)
-	return native.getSize(abspath(path))
+    return native.getSize(abspath(path))
 end
 
 function fs.delete(path)
-	return native.delete(abspath(path))
+    return native.delete(abspath(path))
 end
 
 function fs.getDrive(path)
-	return native.getDrive(abspath(path))
+    return native.getDrive(abspath(path))
 end
 
 function fs.getFreeSpace(path)
-	return native.getFreeSpace(abspath(path))
+    return native.getFreeSpace(abspath(path))
 end
 
 function fs.isReadOnly(path)
-	return native.isReadOnly(abspath(path))
+    return native.isReadOnly(abspath(path))
 end
 
 function fs.exists(path)
-	return native.exists(abspath(path))
+    return native.exists(abspath(path))
 end
 
 function fs.isDir(path)
-	return native.isDir(abspath(path))
+    return native.isDir(abspath(path))
 end
 
 function fs.open(path, mode)
-	return native.open(abspath(path), mode)
+    return native.open(abspath(path), mode)
 end
 
 function fs.move(src, dest)
-	return native.move(abspath(src), abspath(dest))
+    return native.move(abspath(src), abspath(dest))
 end
 
 function fs.copy(src, dest)
-	return native.copy(abspath(src), abspath(dest))
+    return native.copy(abspath(src), abspath(dest))
 end
 
 for k, v in pairs(native) do
     if  (fs[k] == nil) then
-	    error("function "..k.." is bad")
-	    fs[k] = v
-	end
+        error("function "..k.." is bad")
+        fs[k] = v
+    end
 end
 --]]
 

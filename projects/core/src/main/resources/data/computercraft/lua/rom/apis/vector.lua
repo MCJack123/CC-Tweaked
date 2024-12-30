@@ -128,7 +128,7 @@ local vector = {
     --
     -- @tparam Vector self The first vector to compute the dot product of.
     -- @tparam Vector other The second vector to compute the dot product of.
-    -- @treturn Vector The dot product of `self` and `other`.
+    -- @treturn number The dot product of `self` and `other`.
     -- @usage v1:dot(v2)
     dot = function(self, other)
         if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end

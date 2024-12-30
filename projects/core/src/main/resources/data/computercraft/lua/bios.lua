@@ -11,8 +11,8 @@ local expect
 
 function MAKEBOOTMESG(format, ...)
     local str = string.format(format, ...)
-	table.insert(ALLBOOTMESG, str)
-	--if  print then print(str) end
+    table.insert(ALLBOOTMESG, str)
+    --if  print then print(str) end
 end
 
 if  not ALLBOOTMESG then
@@ -146,7 +146,7 @@ local function copy_val(obj, seen)
         seen[obj] = res
         return res
     end
-	
+    
     if  (type(obj) ~= "table") then return obj end
     if  seen[obj] then return seen[obj] end
     

@@ -52,12 +52,12 @@ local function wrap_request(_url, ...)
         while true do
             local event, param1, param2, param3 = os.pullEvent()
             if  (param1 == _url) then
-			    if  (event == "http_success") then
+                if  (event == "http_success") then
                     return param2
                 elseif(event == "http_failure") then
                     return nil, param2, param3
                 end
-			end
+            end
         end
     end
     return nil, err
@@ -383,12 +383,12 @@ function http.websocket(url, headers)
     while true do
         local event, url, param = os.pullEvent( )
         if  (url == actual_url) then
-		    if  (event == "websocket_success") then
+            if  (event == "websocket_success") then
                 return param
             elseif(event == "websocket_failure") then
                 return false, param
             end
-		end
+        end
     end
 end
 

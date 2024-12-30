@@ -75,13 +75,13 @@ function help.topics()
             local tList = fs.list(sPath)
             for _, sFile in pairs(tList) do
                 if  (   (string.sub(sFile, 1, 1) ~= ".")
-				    and not fs.isDir(fs.combine(sPath, sFile))
-					) then
+                    and not fs.isDir(fs.combine(sPath, sFile))
+                    ) then
                     for i = 2, #extensions do
                         local extension = extensions[i]
                         if  (   (#sFile > #extension)
-						    and (sFile:sub(-#extension) == extension)
-							) then
+                            and (sFile:sub(-#extension) == extension)
+                            ) then
                             sFile = sFile:sub(1, -#extension - 1)
                         end
                     end

@@ -7,9 +7,13 @@
 -- @module textutils
 -- @since 1.2
 
-local expect = dofile("rom/modules/main/cc/expect.lua")
+local pgk_env = setmetatable({}, { __index = _ENV })
+pgk_env.require = dofile("rom/modules/main/cc/require.lua").make(pgk_env, "rom/modules/main")
+local require = pgk_env.require
+
+local expect = require("cc.expect")
 local expect, field = expect.expect, expect.field
-local wrap = dofile("rom/modules/main/cc/strings.lua").wrap
+local wrap = require("cc.strings").wrap
 
 local textutils = {}
 
@@ -72,7 +76,7 @@ function textutils.formatTime(nTime, bTwentyFourHour)
     expect(1, nTime, "number")
     expect(2, bTwentyFourHour, "boolean", "nil")
     local sTOD = nil
-    if not bTwentyFourHour then -- XXXX (bTwentyFourHour == false)
+    if  not bTwentyFourHour then
         sTOD = (nTime >= 12) and "PM" or "AM"
         if  (nTime >= 13) then
             nTime = nTime - 12
@@ -81,7 +85,7 @@ function textutils.formatTime(nTime, bTwentyFourHour)
 
     local nHour = math.floor(nTime)
     local nMinute = math.floor((nTime - nHour) * 60)
-    if sTOD then
+    if  sTOD then
         return string.format("%d:%02d %s", nHour == 0 and 12 or nHour, nMinute, sTOD)
     else
         return string.format("%d:%02d", nHour, nMinute)
@@ -94,8 +98,7 @@ local function makePagedScroll(_term, _nFreeLines)
     return function(_n)
         for _ = 1, _n do
             nativeScroll(1)
-
-            if nFreeLines <= 0 then
+            if  (nFreeLines <= 0) then
                 local _, h = _term.getSize()
                 _term.setCursorPos(1, h)
                 _term.write("Press any key to continue")
@@ -178,9 +181,9 @@ local function tabulateCommon(bPaged, ...)
         if  (type(t) == "table") then
             for nu, sItem in pairs(t) do
                 local ty = type(sItem)
-                if  ((ty ~= "string") and (ty ~= "number")) then
+                if  ((ty ~= "string") and (ty ~= "number") then
                     error("bad argument #" .. n .. "." .. nu .. " (string expected, got " .. ty .. ")", 3)
-                end -- errorf
+                end
                 nMaxLen = math.max(#tostring(sItem) + 1, nMaxLen)
             end
         end
@@ -324,7 +327,6 @@ local function serialize_impl(t, tracking, indent, opts)
         error("Cannot serialize type " .. sType, 0)
     end
     -- sType == "table"
-    
     if  (tracking[t] ~= nil) then
         if  (tracking[t] == false) then
             error("Cannot serialize table with repeated entries", 0)
@@ -333,7 +335,7 @@ local function serialize_impl(t, tracking, indent, opts)
         end
     end
     tracking[t] = true
-
+    
     local result
     if  (next(t) == nil) then
         -- Empty tables are simple
@@ -355,9 +357,9 @@ local function serialize_impl(t, tracking, indent, opts)
     for k, v in inext, t do
         seen_keys[k] = true
         result = result
-		      .. sub_indent
-			  .. serialize_impl(v, tracking, sub_indent, opts)
-			  .. comma
+              .. sub_indent
+              .. serialize_impl(v, tracking, sub_indent, opts)
+              .. comma
     end
     for k, v in next, t do
         if  not seen_keys[k] then
@@ -367,9 +369,9 @@ local function serialize_impl(t, tracking, indent, opts)
                 and string.match(k, "^[%a_][%a%d_]*$")
                 ) then
                 sEntry = k
-				      .. equal
-					  .. serialize_impl(v, tracking, sub_indent, opts)
-					  .. comma
+                      .. equal
+                      .. serialize_impl(v, tracking, sub_indent, opts)
+                      .. comma
             else
                 sEntry = open_key
                       .. serialize_impl(k, tracking, sub_indent, opts)
@@ -388,7 +390,6 @@ local function serialize_impl(t, tracking, indent, opts)
         tracking[t] = false
     end
     return result
-
 end
 
 local function mk_tbl(str, name)
@@ -435,9 +436,7 @@ do
     }
     for i = 0, 0x1f do
         local c = string.char(i)
-        if  (map[c] == nil) then
-            map[c] = hexify(c)
-        end
+        if  (map[c] == nil) then map[c] = hexify(c) end
     end
 
     serializeJSONString = function(s, options)
@@ -455,10 +454,10 @@ do
             elseif((code <= 0x5C) and map[string.char(code)]) then
                 -- 0x5C = `\`, don't run `string.char` if we don't need to
                 retval = retval .. map[string.char(code)]
-            elseif((code < 0x20) or (code >= 0x7F)) then
-                retval = retval .. ("\\u%04X"):format(code)
-            else
+            elseif((0x20 <= code) and (code < 0x7F)) then
                 retval = retval .. string.char(code)
+            else
+                retval = retval .. ("\\u%04X"):format(code)
             end
         end
         return retval .. '"'
@@ -510,10 +509,10 @@ local function serializeJSONImpl(t, tracking, options)
             local sEntry
             if  bNBTStyle then
                 sEntry = tostring(k) .. ":"
-				      .. serializeJSONImpl(v, tracking, options)
+                      .. serializeJSONImpl(v, tracking, options)
             else
                 sEntry = serializeJSONString(k, options) .. ":"
-				      .. serializeJSONImpl(v, tracking, options)
+                      .. serializeJSONImpl(v, tracking, options)
             end
             if  (nObjectSize == 0) then
                 sObjectResult = sObjectResult .. sEntry
@@ -535,8 +534,7 @@ local function serializeJSONImpl(t, tracking, options)
             -- if the array is nil at index k the value is "null"
             -- as to keep the unused indexes in between used ones.
             sEntry = "null"
-        else
-            -- if the array index does not point to a nil we serialise it's content.
+        else -- if the array index does not point to a nil we serialise it's content.
             sEntry = serializeJSONImpl(t[k], tracking, options)
         end
         if  (nArraySize == 0) then
@@ -560,18 +558,20 @@ local function serializeJSONImpl(t, tracking, options)
         tracking[t] = false
     end
     return result
-
 end
 
 local unserialise_json
 do
-    -- XXXX ??? why
-    ---local sub, find, match, concat, tonumber = string.sub, string.find, string.match, table.concat, tonumber
+    local sub, find, match, concat, tonumber = string.sub, string.find, string.match, table.concat, tonumber
 
     --- Skip any whitespace
     local function skip(str, pos)
-        local _, last = str:find("^[ \n\r\t]+", pos)
-        if last then return last + 1 else return pos end
+        local _, last = find(str, "^[ \n\r\t]+", pos)
+        if  last then
+            return last + 1
+        else
+            return pos
+        end
     end
 
     local escapes =
@@ -582,22 +582,19 @@ do
     local mt = {}
 
     local function error_at(pos, msg, ...)
-        if  (select('#', ...) > 0) then msg = msg:format(...) end
+        if  (select('#', ...) > 0) then
+            msg = msg:format(...)
+        end
         error(setmetatable({ pos = pos, msg = msg }, mt))
     end
 
     local function expected(pos, actual, exp)
-        if  (actual == "") then
-            actual = "end of input"
-        else
-            actual = ("%q"):format(actual)
-        end
+        if actual == "" then actual = "end of input" else actual = ("%q"):format(actual) end
         error_at(pos, "Unexpected %s, expected %s.", actual, exp)
     end
 
     local function parse_string(str, pos, terminate)
-        -- XXXX local buf, n = {}, 1
-        local buf = {}
+        local buf, n = {}, 1
 
         -- We attempt to match all non-special characters at once using Lua patterns, as this
         -- provides a significant speed boost. This is all characters >= " " except \ and the
@@ -608,7 +605,7 @@ do
         end
 
         while true do
-            local c = str:sub(pos, pos)
+            local c = sub(str, pos, pos)
             if  (c == "") then
                 error_at(pos, "Unexpected end of input, expected '\"'.")
             end
@@ -616,38 +613,34 @@ do
 
             if  (c == "\\") then
                 -- Handle the various escapes
-                c = str:sub(pos + 1, pos + 1)
+                c = sub(str, pos + 1, pos + 1)
                 if  (c == "") then
                     error_at(pos, "Unexpected end of input, expected escape sequence.")
-                elseif(c == "u") then
-                    local num_str = str:match("^%x%x%x%x", pos + 2)
+                end
+
+                if  (c == "u") then
+                    local num_str = match(str, "^%x%x%x%x", pos + 2)
                     if  not num_str then
-                        error_at(pos, "Malformed unicode escape %q.", str:sub(pos + 2, pos + 5))
+                        error_at(pos, "Malformed unicode escape %q.", sub(str, pos + 2, pos + 5))
                     end
-                    -- XXXX buf[n], n, pos = utf8.char(tonumber(num_str, 16)), n + 1, pos + 6
-                    table.insert(buf, utf8.char(tonumber(num_str, 16)))
-                    pos = pos + 6
+                    buf[n], n, pos = utf8.char(tonumber(num_str, 16)), n + 1, pos + 6
                 else
                     local unesc = escapes[c]
                     if  not unesc then
                         error_at(pos + 1, "Unknown escape character %q.", c)
                     end
-                    -- XXXX buf[n], n, pos = unesc, n + 1, pos + 2
-                    table.insert(buf, unesc)
-                    pos = pos + 2
+                    buf[n], n, pos = unesc, n + 1, pos + 2
                 end
             elseif(c >= " ") then
-                local _, finish = str:find(char_pat, pos)
-                -- XXXX buf[n], n = str:sub(pos, finish), n + 1
-                table.insert(buf, str:sub(pos, finish))
+                local _, finish = find(str, char_pat, pos)
+                buf[n], n = sub(str, pos, finish), n + 1
                 pos = finish + 1
             else
                 error_at(pos + 1, "Unescaped whitespace %q.", c)
             end
         end
 
-        -- XXXX return concat(buf, "", 1, n - 1), pos + 1
-        return table.concat(buf, ""), pos + 1
+        return concat(buf, "", 1, n - 1), pos + 1
     end
 
     local num_types =
@@ -658,13 +651,13 @@ do
     , d = true, D = true
     }
     local function parse_number(str, pos, opts)
-        local _, last, num_str = str:find('^(-?%d+%.?%d*[eE]?[+-]?%d*)', pos)
+        local _, last, num_str = find(str, '^(-?%d+%.?%d*[eE]?[+-]?%d*)', pos)
         local val = tonumber(num_str)
         if  not val then
             error_at(pos, "Malformed number %q.", num_str)
         end
 
-        if  opts.nbt_style and num_types[str:sub(last + 1, last + 1)] then
+        if  (opts.nbt_style and num_types[sub(str, last + 1, last + 1)]) then
             return val, last + 2
         end
 
@@ -672,29 +665,29 @@ do
     end
 
     local function parse_ident(str, pos)
-        local _, last, val = str:find('^([%a][%w_]*)', pos)
+        local _, last, val = find(str, '^([%a][%w_]*)', pos)
         return val, last + 1
     end
 
     local arr_types = { I = true, L = true, B = true }
     local function decode_impl(str, pos, opts)
-        local c = str:sub(pos, pos)
+        local c = sub(str, pos, pos)
         if  (c == '"') then
             return parse_string(str, pos + 1, '"')
         elseif((c == "'") and opts.nbt_style) then
-            return parse_string(str, pos + 1, "'")
-        elseif(c == "-") or ((c >= "0") and (c <= "9")) then
+            return parse_string(str, pos + 1, "\'")
+        elseif (c == "-") or (c >= "0" and c <= "9") then
             return parse_number(str, pos, opts)
         elseif(c == "t") then
-            if  (str:sub(pos + 1, pos + 3) == "rue") then
+            if  (sub(str, pos + 1, pos + 3) == "rue") then
                 return true, pos + 4
             end
         elseif(c == 'f') then
-            if  (str:sub(pos + 1, pos + 4) == "alse") then
+            if  (sub(str, pos + 1, pos + 4) == "alse") then
                 return false, pos + 5
             end
         elseif(c == 'n') then
-            if  (str:sub(pos + 1, pos + 3) == "ull") then
+            if  (sub(str, pos + 1, pos + 3) == "ull") then
                 if  opts.parse_null then
                     return textutils.json_null, pos + 4
                 else
@@ -705,20 +698,18 @@ do
             local obj = {}
 
             pos = skip(str, pos + 1)
-            c = str:sub(pos, pos)
+            c = sub(str, pos, pos)
 
             if  (c == "") then
                 return error_at(pos, "Unexpected end of input, expected '}'.")
             end
-            if  (c == "}") then
-                return obj, pos + 1
-            end
+            if  (c == "}") then return obj, pos + 1 end
 
             while true do
                 local key, value
-                if  (c == '"') then
-                    key, pos = parse_string(str, pos + 1, '"')
-                elseif(opts.nbt_style) then
+                if  (c == '\"') then
+                    key, pos = parse_string(str, pos + 1, '\"')
+                elseif opts.nbt_style then
                     key, pos = parse_ident(str, pos)
                 else
                     return expected(pos, c, "object key")
@@ -726,17 +717,15 @@ do
 
                 pos = skip(str, pos)
 
-                c = str:sub(pos, pos)
-                if  (c ~= ":") then
-                    return expected(pos, c, "':'")
-                end
+                c = sub(str, pos, pos)
+                if  (c ~= ":") then return expected(pos, c, "':'") end
 
                 value, pos = decode_impl(str, skip(str, pos + 1), opts)
                 obj[key] = value
 
                 -- Consume the next delimiter
                 pos = skip(str, pos)
-                c = str:sub(pos, pos)
+                c = sub(str, pos, pos)
                 if  (c == "}") then
                     break
                 elseif(c == ",") then
@@ -745,7 +734,7 @@ do
                     return expected(pos, c, "',' or '}'")
                 end
 
-                c = str:sub(pos, pos)
+                c = sub(str, pos, pos)
             end
 
             return obj, pos + 1
@@ -754,19 +743,17 @@ do
             local arr, n = {}, 1
 
             pos = skip(str, pos + 1)
-            c = str:sub(pos, pos)
+            c = sub(str, pos, pos)
 
             if  (   arr_types[c]
-                and (str:sub(pos + 1, pos + 1) == ";")
+                and (sub(str, pos + 1, pos + 1) == ";")
                 and opts.nbt_style
                 ) then
                 pos = skip(str, pos + 2)
-                c = str:sub(pos, pos)
+                c = sub(str, pos, pos)
             end
 
-            if  (c == "") then
-                return expected(pos, c, "']'")
-            end
+            if  (c == "") then return expected(pos, c, "']'") end
             if  (c == "]") then
                 if  (opts.parse_empty_array ~= false) then
                     return textutils.empty_json_array, pos + 1
@@ -780,7 +767,7 @@ do
 
                 -- Consume the next delimiter
                 pos = skip(str, pos)
-                c = str:sub(pos, pos)
+                c = sub(str, pos, pos)
                 if  (c == "]") then
                     break
                 elseif(c == ",") then
@@ -860,7 +847,7 @@ do
         pos = skip(s, pos)
         if  (pos <= #s) then
             return nil
-                 , string.format("Malformed JSON at position %d: Unexpected trailing character %q."
+                 , string.format( "Malformed JSON at position %d: Unexpected trailing character %q."
                                 , pos
                                 , sub(s, pos, pos)
                                 )
@@ -923,10 +910,10 @@ textutils.serialise = textutils.serialize -- GB version
 -- @since 1.3
 function textutils.unserialize(s)
     expect(1, s, "string")
-    local func = load("return " .. s, "unserialize", "t", {}) -- XXXX probably good idea to not load it
+    local func = load("return " .. s, "unserialize", "t", {})
     if  func then
         local ok, result = pcall(func)
-        if ok then
+        if  ok then
             return result
         end
     end
@@ -937,12 +924,31 @@ textutils.unserialise = textutils.unserialize -- GB version
 
 --[[- Returns a JSON representation of the given data.
 
-This function attempts to guess whether a table is a JSON array or
-object. However, empty tables are assumed to be empty objects - use
-[`textutils.empty_json_array`] to mark an empty array.
-
 This is largely intended for interacting with various functions from the
 [`commands`] API, though may also be used in making [`http`] requests.
+
+Lua has a rather different data model to Javascript/JSON. As a result, some Lua
+values do not serialise cleanly into JSON.
+
+ - Lua tables can contain arbitrary key-value pairs, but JSON only accepts arrays,
+   and objects (which require a string key). When serialising a table, if it only
+   has numeric keys, then it will be treated as an array. Otherwise, the table will
+   be serialised to an object using the string keys. Non-string keys (such as numbers
+   or tables) will be dropped.
+
+   A consequence of this is that an empty table will always be serialised to an object,
+   not an array. [`textutils.empty_json_array`] may be used to express an empty array.
+
+ - Lua strings are an a sequence of raw bytes, and do not have any specific encoding.
+   However, JSON strings must be valid unicode. By default, non-ASCII characters in a
+   string are serialised to their unicode code point (for instance, `"\xfe"` is
+   converted to `"\u00fe"`). The `unicode_strings` option may be set to treat all input
+   strings as UTF-8.
+
+ - Lua does not distinguish between missing keys (`undefined` in JS) and ones explicitly
+   set to `null`. As a result `{ x = nil }` is serialised to `{}`. [`textutils.json_null`]
+   may be used to get an explicit null value (`{ x = textutils.json_null }` will serialise
+   to `{"x": null}`).
 
 @param[1] t The value to serialise. Like [`textutils.serialise`], this should not
 contain recursive tables or functions.
@@ -1011,24 +1017,26 @@ textutils.unserialiseJSON = unserialise_json
 -- @since 1.31
 function textutils.urlEncode(str)
     expect(1, str, "string")
+    local gsub, byte, format, band, arshift = string.gsub, string.byte, string.format, bit32.band, bit32.arshift
     
     local function gsub_func(c)
-        local n = string.byte(c)
+        if  (c == " ") then return "+" end
+
+        local n = byte(c)
         if  (n < 128) then
             -- ASCII
-            return string.format("%%%02X", n)
+            return format("%%%02X", n)
         else
             -- Non-ASCII (encode as UTF-8)
-            return string.format("%%%02X", 192 + bit32.band(bit32.arshift(n, 6), 31))
-                .. string.format("%%%02X", 128 + bit32.band(n, 63))
+            return format("%%%02X%%%02X"
+                         , 192 + band(arshift(n, 6), 31)
+                         , 128 + band(n, 63)
+                         )
         end
     end
     
-    if  str then
-        str = string.gsub(str, "\n", "\r\n")
-        str = string.gsub(str, "([^A-Za-z0-9 %-%_%.])", gsub_func)
-        str = string.gsub(str, " ", "+")
-    end
+    str = gsub(str, "\n", "\r\n")
+    str = gsub(str, "[^A-Za-z0-9%-%_%.]", gsub_func)
     return str
 end
 
@@ -1101,11 +1109,10 @@ function textutils.complete(sSearchText, tSearchTable)
                         table.insert(tResults, sResult .. "(")
                     elseif(type(v) == "table") then
                         local tMetatable = getmetatable(v)
-                        if  (  tMetatable 
-                            and (  type(tMetatable.__call) == "function"
-                                or type(tMetatable.__call) == "table"
-                            )   )
-                        then
+                        if  (   tMetatable 
+                            and (  (type(tMetatable.__call) == "function")
+                                or (type(tMetatable.__call) == "table")
+                            )   ) then
                             table.insert(tResults, sResult .. "(")
                         end
                     end

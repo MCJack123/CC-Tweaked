@@ -304,7 +304,7 @@ function peripheral.wrap(name)
                                     , type = types[1]
                                     , types = types
                                     }
-							   )
+                               )
     for _, method in ipairs(methods) do
         result[method] = function(...)
             return peripheral.call(name, method, ...)

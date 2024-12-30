@@ -413,8 +413,8 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
 
     local function setBackgroundColor(color)
         if  (tHex[color] == nil) then
-		    color = parse_color(color)
-		end
+            color = parse_color(color)
+        end
         nBackgroundColor = color
     end
 
