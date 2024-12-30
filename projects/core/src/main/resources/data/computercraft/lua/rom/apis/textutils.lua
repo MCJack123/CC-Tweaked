@@ -596,7 +596,7 @@ do
     end
 
     local function parse_string(str, pos, terminate)
-        --local buf, n = {}, 1
+        -- XXXX local buf, n = {}, 1
         local buf = {}
 
         -- We attempt to match all non-special characters at once using Lua patterns, as this
@@ -624,7 +624,7 @@ do
                     if  not num_str then
                         error_at(pos, "Malformed unicode escape %q.", str:sub(pos + 2, pos + 5))
                     end
-                    --buf[n], n, pos = utf8.char(tonumber(num_str, 16)), n + 1, pos + 6
+                    -- XXXX buf[n], n, pos = utf8.char(tonumber(num_str, 16)), n + 1, pos + 6
                     table.insert(buf, utf8.char(tonumber(num_str, 16)))
                     pos = pos + 6
                 else
@@ -632,13 +632,13 @@ do
                     if  not unesc then
                         error_at(pos + 1, "Unknown escape character %q.", c)
                     end
-                    --buf[n], n, pos = unesc, n + 1, pos + 2
+                    -- XXXX buf[n], n, pos = unesc, n + 1, pos + 2
                     table.insert(buf, unesc)
                     pos = pos + 2
                 end
             elseif(c >= " ") then
                 local _, finish = str:find(char_pat, pos)
-                --buf[n], n = str:sub(pos, finish), n + 1
+                -- XXXX buf[n], n = str:sub(pos, finish), n + 1
                 table.insert(buf, str:sub(pos, finish))
                 pos = finish + 1
             else
@@ -646,7 +646,7 @@ do
             end
         end
 
-        --return concat(buf, "", 1, n - 1), pos + 1
+        -- XXXX return concat(buf, "", 1, n - 1), pos + 1
         return table.concat(buf, ""), pos + 1
     end
 

@@ -5,47 +5,26 @@
 --- @module fs
 
 MAKEBOOTMESG("loading fs")
--- if no shell assume pwd at "/"
 
 local expect = dofile("rom/modules/main/cc/expect.lua")
 local expect, field = expect.expect, expect.field
 
 local native = fs
 
--- really should be call to os like os.getpwd() or os.getprogenv().pwd
--- those kind of simmular to coroutine.running()
---
--- caller[ fs.func[ getpwd
-local function getpwd() -- unsued
-    local info = debug.getinfo(3)
-    if  not info then return "/" end
-    local name, env = debug.getupvalue(info.func, 1)
-    assert(name == "_ENV", "assumption wrong")
-    return env.shell and "/"..env.shell.dir()
-end
-
 -- get absolute path
--- caller[ fs.func[ resolve
-local function resolve(path)
+local function abspath(path)
     expect(1, path, "string")
     local sStartChar = string.sub(path, 1, 1)
-    path = "/"..native.combine(path)
+    path = native.combine(path)
     if  ((sStartChar == "/") or (sStartChar == "\\")) then
-        return path
+        return "/"..path
     end
     
-    local info = debug.getinfo(3)
-    if  not info then return path end
-    
-    local name, env = debug.getupvalue(info.func, 1)
-    assert(name == "_ENV", "assumption wrong")
-    if  not env.shell then return path end
-    
-    return "/"..native.combine(shell.dir(), path) -- pwd
+	local progenv = os.getprogenv()
+    return progenv and "/"..native.combine(progenv.pwd, path) or "/"..path
 end
 
 --[[
-fs.list(path)
 fs.complete
 fs.find
 
@@ -56,12 +35,12 @@ for <fts_file> in <fts>:iter() do
     <fts_file>.name
     <fts_file>.order = "pre" | "post"  -- if directory
     <fts_file>.children                -- if directory, array of paths
+	-- set only when read (to be able to change dir and not fuckup)
     <fts_file>:skip()
     <fts_file>:again() -- both pre and post order
     --<fts>:skip(<fts_file>)
     --<fts>:again(<fts_file>)
     --<fts>:queue(<fts_file>)
-    <fts>:children(<fts_file>)
 end
 ]]
 
@@ -71,8 +50,8 @@ for k, v in pairs(native) do
 end
 
 --[[
-fs.getName remain unchanged
-fs.getDir, fs.combine keep trailing /
+fs.getName, fs.list remain unchanged
+fs.getDir, fs.combine keep prefix /
 ]]
 
 function fs.getDir(path)
@@ -96,23 +75,70 @@ function fs.combine(path, ...)
 end
 
 --[[
-makeDir(path)
-getCapacity(path)
-attributes(path)
-list(path)
-getSize(path)
-delete(path)
-getDrive(path)
-getFreeSpace(path)
-isReadOnly(path)
-exists(path)
-isDir(path)
 
-open(path, mode)
-move(src, dest)
-copy(src, dest)
+function fs.abspath(...)
+    return abspath(native.combine(...))
+end
 
-]]
+function fs.makeDir(path)
+	return native.makeDir(abspath(path))
+end
+
+function fs.getCapacity(path)
+	return native.getCapacity(abspath(path))
+end
+
+function fs.attributes(path)
+	return native.attributes(abspath(path))
+end
+
+function fs.getSize(path)
+	return native.getSize(abspath(path))
+end
+
+function fs.delete(path)
+	return native.delete(abspath(path))
+end
+
+function fs.getDrive(path)
+	return native.getDrive(abspath(path))
+end
+
+function fs.getFreeSpace(path)
+	return native.getFreeSpace(abspath(path))
+end
+
+function fs.isReadOnly(path)
+	return native.isReadOnly(abspath(path))
+end
+
+function fs.exists(path)
+	return native.exists(abspath(path))
+end
+
+function fs.isDir(path)
+	return native.isDir(abspath(path))
+end
+
+function fs.open(path, mode)
+	return native.open(abspath(path), mode)
+end
+
+function fs.move(src, dest)
+	return native.move(abspath(src), abspath(dest))
+end
+
+function fs.copy(src, dest)
+	return native.copy(abspath(src), abspath(dest))
+end
+
+for k, v in pairs(native) do
+    if  (fs[k] == nil) then
+	    error("function "..k.." is bad")
+	    fs[k] = v
+	end
+end
+--]]
 
 --[[- Provides completion for a file or directory name, suitable for use with
 [`_G.read`].

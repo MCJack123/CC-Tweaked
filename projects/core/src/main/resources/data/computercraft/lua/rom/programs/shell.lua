@@ -51,10 +51,11 @@ if multishell then
 end
 
 local bExit = false
-local sDir = parentShell and parentShell.dir() or "/"
-local sPath = parentShell and parentShell.path() or ".:/rom/programs"
-local tAliases = parentShell and parentShell.aliases() or {}
-local tCompletionInfo = parentShell and parentShell.getCompletionInfo() or {}
+local progenv = os.getprocenv() -- it should not be here at all
+progenv.pwd = progenv.pwd or "/"
+progenv.path = progenv.path or ".:/rom/programs"
+progenv.shell_Alliases       = progenv.shell_Alliases or {}
+progenv.shell_CompletionInfo = progenv.shell_CompletionInfo or {}
 local tProgramStack = {}
 
 local shell = {} --- @export
@@ -178,7 +179,7 @@ local function executeProgram(remainingRecursion, path, args)
         end
     end
 
-    local co = coroutine.create(func)
+    local co = os.newproc(func)
     local ok, err = exception.try(co, table.unpack(args, 1, args.n))
 
     if ok then return true end
@@ -283,7 +284,7 @@ end
 -- @treturn string The current working directory.
 -- @see setDir To change the working directory.
 function shell.dir()
-    return sDir
+    return progenv.pwd
 end
 
 --- Set the current working directory.
@@ -298,7 +299,7 @@ function shell.setDir(dir)
     if not fs.isDir(dir) then
         error("Not a directory", 2)
     end
-    sDir = fs.combine(dir)
+    progenv.pwd = fs.combine(dir)
 end
 
 --- Set the path where programs are located.
@@ -311,7 +312,7 @@ end
 -- @treturn string The current shell's path.
 -- @see setPath To change the current path.
 function shell.path()
-    return sPath
+    return progenv.path
 end
 
 --- Set the [current program path][`path`].
@@ -323,7 +324,7 @@ end
 -- @since 1.2
 function shell.setPath(path)
     expect(1, path, "string")
-    sPath = path
+    progenv.path = path
 end
 
 --- Resolve a relative path to an absolute path.
@@ -341,21 +342,21 @@ end
 function shell.resolve(path)
     expect(1, path, "string")
     local sStartChar = string.sub(path, 1, 1)
-    if sStartChar == "/" or sStartChar == "\\" then
-        return fs.combine("", path)
+    if  ((sStartChar == "/") or (sStartChar == "\\")) then
+		return fs.combine(path)
     else
-        return fs.combine(sDir, path)
+        return fs.combine(progenv.pwd, path)
     end
 end
 
-local function pathWithExtension(_sPath, _sExt)
-    local nLen = #sPath
-    local sEndChar = string.sub(_sPath, nLen, nLen)
+local function pathWithExtension(path, ext)
+    local nLen = #progenv.path
+    local sEndChar = string.sub(path, nLen, nLen)
     -- Remove any trailing slashes so we can add an extension to the path safely
-    if sEndChar == "/" or sEndChar == "\\" then
-        _sPath = string.sub(_sPath, 1, nLen - 1)
+    if  ((sEndChar == "/") or (sEndChar == "\\")) then
+        path = string.sub(path, 1, nLen - 1)
     end
-    return _sPath .. "." .. _sExt
+    return path .. "." .. ext
 end
 
 --- Resolve a program, using the [program path][`path`] and list of [aliases][`aliases`].
@@ -372,8 +373,8 @@ end
 function shell.resolveProgram(command)
     expect(1, command, "string")
     -- Substitute aliases firsts
-    if tAliases[command] ~= nil then
-        command = tAliases[command]
+    if  (progenv.shell_Alliases[command] ~= nil) then
+        command = progenv.shell_Alliases[command]
     end
 
     -- If the path is a global path, use it directly
@@ -391,7 +392,7 @@ function shell.resolveProgram(command)
     end
 
      -- Otherwise, look on the path variable
-    for sPath in string.gmatch(sPath, "[^:]+") do
+    for sPath in string.gmatch(progenv.path, "[^:]+") do
         sPath = fs.combine(shell.resolve(sPath), command)
         if fs.exists(sPath) and not fs.isDir(sPath) then
             return sPath
@@ -420,7 +421,7 @@ function shell.programs(include_hidden)
     local tItems = {}
 
     -- Add programs from the path
-    for sPath in string.gmatch(sPath, "[^:]+") do
+    for sPath in string.gmatch(progenv.path, "[^:]+") do
         sPath = shell.resolve(sPath)
         if fs.isDir(sPath) then
             local tList = fs.list(sPath)
@@ -450,7 +451,7 @@ local function completeProgram(sLine)
     local bIncludeHidden = settings.get("shell.autocomplete_hidden")
     if #sLine > 0 and (sLine:find("/") or sLine:find("\\")) then
         -- Add programs from the root
-        return fs.complete(sLine, sDir, {
+        return fs.complete(sLine, progenv.pwd, {
             include_files = true,
             include_dirs = false,
             include_hidden = bIncludeHidden,
@@ -461,7 +462,7 @@ local function completeProgram(sLine)
         local tSeen = {}
 
         -- Add aliases
-        for sAlias in pairs(tAliases) do
+        for sAlias in pairs(progenv.shell_Alliases) do
             if #sAlias > #sLine and string.sub(sAlias, 1, #sLine) == sLine then
                 local sResult = string.sub(sAlias, #sLine + 1)
                 if not tSeen[sResult] then
@@ -472,7 +473,7 @@ local function completeProgram(sLine)
         end
 
         -- Add all subdirectories. We don't include files as they will be added in the block below
-        local tDirs = fs.complete(sLine, sDir, {
+        local tDirs = fs.complete(sLine, progenv.pwd, {
             include_files = false,
             include_dirs = false,
             include_hidden = bIncludeHidden,
@@ -505,7 +506,7 @@ local function completeProgram(sLine)
 end
 
 local function completeProgramArgument(sProgram, nArgument, sPart, tPreviousParts)
-    local tInfo = tCompletionInfo[sProgram]
+    local tInfo = progenv.shell_CompletionInfo[sProgram]
     if tInfo then
         return tInfo.fnComplete(shell, nArgument, sPart, tPreviousParts)
     end
@@ -539,14 +540,14 @@ function shell.complete(sLine)
         if nIndex == 1 then
             local sBit = tWords[1] or ""
             local sPath = shell.resolveProgram(sBit)
-            if tCompletionInfo[sPath] then
+            if  progenv.shell_CompletionInfo[sPath] then
                 return { " " }
             else
                 local tResults = completeProgram(sBit)
                 for n = 1, #tResults do
                     local sResult = tResults[n]
                     local sPath = shell.resolveProgram(sBit .. sResult)
-                    if tCompletionInfo[sPath] then
+                    if  progenv.shell_CompletionInfo[sPath] then
                         tResults[n] = sResult .. " "
                     end
                 end
@@ -607,9 +608,8 @@ end
 function shell.setCompletionFunction(program, complete)
     expect(1, program, "string")
     expect(2, complete, "function")
-    tCompletionInfo[program] = {
-        fnComplete = complete,
-    }
+    progenv.shell_CompletionInfo[program] =
+	{ fnComplete = complete }
 end
 
 --- Get a table containing all completion functions.
@@ -620,7 +620,7 @@ end
 -- @treturn { [string] = { fnComplete = function } } A table mapping the
 -- absolute path of programs, to their completion functions.
 function shell.getCompletionInfo()
-    return tCompletionInfo
+    return progenv.shell_CompletionInfo
 end
 
 --- Returns the path to the currently running program.
@@ -645,7 +645,7 @@ end
 function shell.setAlias(command, program)
     expect(1, command, "string")
     expect(2, program, "string")
-    tAliases[command] = program
+    progenv.shell_Alliases[command] = program
 end
 
 --- Remove an alias.
@@ -653,7 +653,7 @@ end
 -- @tparam string command The alias name to remove.
 function shell.clearAlias(command)
     expect(1, command, "string")
-    tAliases[command] = nil
+    progenv.shell_Alliases[command] = nil
 end
 
 --- Get the current aliases for this shell.
@@ -670,7 +670,7 @@ end
 function shell.aliases()
     -- Copy aliases
     local tCopy = {}
-    for sAlias, sCommand in pairs(tAliases) do
+    for sAlias, sCommand in pairs(progenv.shell_Alliases) do
         tCopy[sAlias] = sCommand
     end
     return tCopy

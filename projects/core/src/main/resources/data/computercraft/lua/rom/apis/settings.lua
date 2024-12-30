@@ -83,7 +83,7 @@ function settings.define(name, options)
                             , table.concat(valid_types, ", ")
                             )
              , 2
-             ) -- XXXX errorf
+             ) -- errorf
     end
     details[name] =
     { description = field(options, "description", "string", "nil")

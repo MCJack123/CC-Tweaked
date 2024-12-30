@@ -10,7 +10,9 @@
 local expect
 
 function MAKEBOOTMESG(format, ...)
-    table.insert(ALLBOOTMESG, string.format(format, ...))
+    local str = string.format(format, ...)
+	table.insert(ALLBOOTMESG, str)
+	--if  print then print(str) end
 end
 
 if  not ALLBOOTMESG then
@@ -94,16 +96,6 @@ _G.bit =
 }
 
 --[[
-env_table = {}
--- env_table should be key weak
--- XXXX
-
-function os.getprocenv()
-    return env_table[coroutine.running()]
-end
-{ pwd  = "/" -- current directory
-, ...
-}
 
 --[==[
 -- get private info about process
@@ -112,18 +104,34 @@ function os.getprocenv_priv(key)
 end
 ]==]
 
-mimic coroutine.create and wrap:
+os.run(coroutine.create(func), ...) -- as func(...), part of shell
 
+-- maybe make
+thread_pid[<thread>] = <pid>
+pid_env[<pid>] = <env>
+-- the only point of doing that to not allow <thread> getting
+
+
+
+]]
+
+local thread_env        = setmetatable({}, { __mode = "k" })
+thread_env[coroutine.running()] = { pwd = "/" }
+
+-- mimic coroutine.create and coroutine.wrap
+-- so that progenv wouldnt lost
 local coroutine_create = coroutine.create
+
 function coroutine.create(func)
     local co = coroutine_create(func)
-    env_table[co] = env_table[coroutine.running()]
+    thread_env[co] = thread_env[coroutine.running()]
+    return co
 end
 
-function wrap(func)
+function coroutine.wrap(func)
     local co = coroutine.create(func)
     return function (...)
-        local ex = {resume(co, ...)}
+        local ex = { resume(co, ...) }
         if  ex[1] then
             return unpack(ex, 2)
         end
@@ -132,16 +140,16 @@ function wrap(func)
 end
 
 local function copy_val(obj, seen)
-    if  (type(obj) ~= "table") then return obj end
-    if  seen[obj] then return seen[obj] end
-    
-    local meta = getmetatable(obj)
-    local __copy = meta and meta.__copy
+    local __copy = getmetatable(obj) and getmetatable(obj).__copy
     if  (type(__copy) == "function") then
         local res = __copy(obj)
         seen[obj] = res
         return res
     end
+	
+    if  (type(obj) ~= "table") then return obj end
+    if  seen[obj] then return seen[obj] end
+    
     local res = {}
     seen[obj] = res
     for k, v in next, obj, nil do
@@ -151,20 +159,21 @@ local function copy_val(obj, seen)
 end
 
 function os.newproc(func) 
-    local tab = env_table[coroutine.running()]
+    local tab = thread_env[coroutine.running()]
     local res, seen = {}, {}
     seen[tab] = res
     for k, v in next, tab, nil do
         res[k] = copy_val(v, seen)
     end
     local co = coroutine_create(func)
-    env_table[co] = res
+    thread_env[co] = res
     return co
 end
 
-os.run(coroutine.create(func), ...) -- as func(...), part of shell
+function os.getprocenv()
+    return thread_env[coroutine.running()]
+end
 
-]]
 
 -- Install lua parts of the os api
 function os.version()
@@ -695,6 +704,7 @@ end
 
 local nativeShutdown = os.shutdown
 function os.shutdown()
+    os.sleep(30)
     nativeShutdown()
     while true do
         coroutine.yield()
@@ -887,6 +897,8 @@ if  _CC_DEFAULT_SETTINGS then
     end
 end
 
+MAKEBOOTMESG("boot 6")
+
 -- Load user settings
 if  fs.exists("/.settings") then
     settings.load("/.settings")
@@ -897,15 +909,17 @@ local ok, err = pcall(parallel.waitForAny,
     function()
         local sShell
         if  (term.isColour() and settings.get("bios.use_multishell")) then
-            sShell = "rom/programs/advanced/multishell.lua"
+            sShell = "/rom/programs/advanced/multishell.lua"
         else
-            sShell = "rom/programs/shell.lua"
+            sShell = "/rom/programs/shell.lua"
         end
         os.run({}, sShell)
-        os.run({}, "rom/programs/shutdown.lua")
+        os.run({}, "/rom/programs/shutdown.lua")
     end,
     rednet.run
 )
+
+MAKEBOOTMESG("boot err %s %s", ok, err)
 
 -- If the shell errored, let the user read it.
 term.redirect(term.native())
@@ -919,4 +933,5 @@ if  not ok then
 end
 
 -- End
+MAKEBOOTMESG("dead")
 os.shutdown()
