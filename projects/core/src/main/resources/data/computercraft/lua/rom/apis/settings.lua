@@ -236,7 +236,7 @@ end
 -- @changed 1.87.0 `path` is now optional.
 function settings.load(path)
     expect(1, path, "string", "nil")
-    local file = fs.open(path or ".settings", "r")
+    local file = fs.open(path or "/.settings", "r")
     if  not file then
         return false
     end
@@ -287,7 +287,7 @@ end
 -- @changed 1.87.0 `path` is now optional.
 function settings.save(path)
     expect(1, path, "string", "nil")
-    local file = fs.open(path or ".settings", "w")
+    local file = fs.open(path or "/.settings", "w")
     if  not file then
         return false
     end

@@ -178,9 +178,8 @@ local function executeProgram(remainingRecursion, path, args)
         end
     end
 
-    MAKEBOOTMESG("shell slander exception %s", coroutine.running())
     local co = coroutine.create(func)
-	local ok, err = exception.try(co, table.unpack(args, 1, args.n))
+    local ok, err = exception.try(co, table.unpack(args, 1, args.n))
 
     if ok then return true end
 
@@ -262,8 +261,7 @@ end
 function shell.run(...)
     local tWords = tokenise(...)
     local sCommand = tWords[1]
-	
-	if sCommand then
+    if sCommand then
         return shell.execute(sCommand, table.unpack(tWords, 2))
     end
     return false

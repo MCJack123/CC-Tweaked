@@ -10,6 +10,91 @@ MAKEBOOTMESG("loading fs")
 local expect = dofile("rom/modules/main/cc/expect.lua")
 local expect, field = expect.expect, expect.field
 
+local native = fs
+
+-- really should be call to os like os.getpwd() or os.getprogenv().pwd
+-- those kind of simmular to coroutine.running()
+--
+-- caller[ fs.func[ getpwd
+local function getpwd() -- unsued
+    local info = debug.getinfo(3)
+    if  not info then return "/" end
+    local name, env = debug.getupvalue(info.func, 1)
+    assert(name == "_ENV", "assumption wrong")
+    return env.shell and "/"..env.shell.dir()
+end
+
+-- get absolute path
+-- caller[ fs.func[ resolve
+local function resolve(path)
+    expect(1, path, "string")
+    local sStartChar = string.sub(path, 1, 1)
+    path = "/"..native.combine(path)
+    if  ((sStartChar == "/") or (sStartChar == "\\")) then
+        return path
+    end
+    
+    local info = debug.getinfo(3)
+    if  not info then return path end
+    
+    local name, env = debug.getupvalue(info.func, 1)
+    assert(name == "_ENV", "assumption wrong")
+    if  not env.shell then return path end
+    
+    return "/"..native.combine(shell.dir(), path) -- pwd
+end
+
+--[[
+fs.list(path)
+fs.complete
+fs.find
+
+<fts> = fts.create(paths, opts)
+<fts_file> = <fts>:read() -- next file
+for <fts_file> in <fts>:iter() do
+    <fts_file>.path
+    <fts_file>.name
+    <fts_file>.order = "pre" | "post"  -- if directory
+    <fts_file>.children                -- if directory, array of paths
+    <fts_file>:skip()
+    <fts_file>:again() -- both pre and post order
+    --<fts>:skip(<fts_file>)
+    --<fts>:again(<fts_file>)
+    --<fts>:queue(<fts_file>)
+    <fts>:children(<fts_file>)
+end
+]]
+
+local fs = {}
+for k, v in pairs(native) do
+    fs[k] = v
+end
+
+--[[
+fs.getName remain unchanged
+fs.getDir, fs.combine keep trailing /
+]]
+
+function fs.getDir(path)
+    expect(1, path, "string")
+    local sStartChar = string.sub(path, 1, 1)
+    if  ((sStartChar == "/") or (sStartChar == "\\")) then
+        return "/"..native.getDir(path)
+    else
+        return native.getDir(path)
+    end
+end
+
+function fs.combine(path, ...)
+    expect(1, path, "string")
+    local sStartChar = string.sub(path, 1, 1)
+    if  ((sStartChar == "/") or (sStartChar == "\\")) then
+        return "/"..native.combine(path, ...)
+    else
+        return native.combine(path, ...)
+    end
+end
+
 --[[
 makeDir(path)
 getCapacity(path)
@@ -19,34 +104,14 @@ getSize(path)
 delete(path)
 getDrive(path)
 getFreeSpace(path)
-getName(path)
 isReadOnly(path)
 exists(path)
 isDir(path)
-getDir(path)
 
 open(path, mode)
 move(src, dest)
 copy(src, dest)
 
-
-combine
-
-fs.find
-
-path has 2 things:
-1) . ..   -- requires pwd, if no shell, suppose its "/"
-2) * ?    -- handled only by fs.find
-]]
-
-local native = fs
-
-local fs = {}
-for k, v in pairs(native) do fs[k] = v end
-
---[[
-function fs.combine
-fucntion fs.getDir
 ]]
 
 --[[- Provides completion for a file or directory name, suitable for use with

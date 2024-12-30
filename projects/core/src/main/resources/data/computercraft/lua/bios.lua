@@ -74,7 +74,7 @@ for k, v in pairs(os) do
 end
 
 do
-    local h = fs.open("rom/modules/main/cc/expect.lua", "r")
+    local h = fs.open("/rom/modules/main/cc/expect.lua", "r")
     local f, err = loadstring(h.readAll(), "@/rom/modules/main/cc/expect.lua")
     h.close()
 
@@ -94,41 +94,75 @@ _G.bit =
 }
 
 --[[
+env_table = {}
+-- env_table should be key weak
+-- XXXX
+
 function os.getprocenv()
     return env_table[coroutine.running()]
 end
-{ pwd = ""
-
+{ pwd  = "/" -- current directory
+, ...
 }
+
+--[==[
+-- get private info about process
+function os.getprocenv_priv(key)
+    return priv_env_table[coroutine.running()][key]
+end
+]==]
 
 mimic coroutine.create and wrap:
 
 local coroutine_create = coroutine.create
 function coroutine.create(func)
     local co = coroutine_create(func)
-	env_table[co] = env_table[coroutine.running()]
-end
-
-function os.newproc(func) 
-    local co = coroutine_create(func)
-	env_table[co] = copy(env_table[coroutine.running()]) -- XXXX
+    env_table[co] = env_table[coroutine.running()]
 end
 
 function wrap(func)
     local co = coroutine.create(func)
-	return function (...)
-	    local ex = {resume(co, ...)}
-		if  ex[1] then
-		    return unpack(ex, 2)
-		end
-		error(ex[2], 2)
-	end
+    return function (...)
+        local ex = {resume(co, ...)}
+        if  ex[1] then
+            return unpack(ex, 2)
+        end
+        error(ex[2], 2)
+    end
+end
+
+local function copy_val(obj, seen)
+    if  (type(obj) ~= "table") then return obj end
+    if  seen[obj] then return seen[obj] end
+    
+    local meta = getmetatable(obj)
+    local __copy = meta and meta.__copy
+    if  (type(__copy) == "function") then
+        local res = __copy(obj)
+        seen[obj] = res
+        return res
+    end
+    local res = {}
+    seen[obj] = res
+    for k, v in next, obj, nil do
+        res[k] = copy_val(v, seen)
+    end
+    return setmetatable(res, getmetatable(obj))
+end
+
+function os.newproc(func) 
+    local tab = env_table[coroutine.running()]
+    local res, seen = {}, {}
+    seen[tab] = res
+    for k, v in next, tab, nil do
+        res[k] = copy_val(v, seen)
+    end
+    local co = coroutine_create(func)
+    env_table[co] = res
+    return co
 end
 
 os.run(coroutine.create(func), ...) -- as func(...), part of shell
-
-
-os.create(func)
 
 ]]
 
@@ -543,12 +577,12 @@ function loadfile(filename, mode, env)
     return func, err
 end
 
-function dofile(_sFile)
-    expect(1, _sFile, "string")
+function dofile(filename, ...)
+    expect(1, filename, "string")
 
-    local fnFile, e = loadfile(_sFile, nil, _G)
-    if  fnFile then
-        return fnFile()
+    local func, e = loadfile(filename, nil, _G)
+    if  func then
+        return func(...)
     else
         error(e, 2)
     end
@@ -609,7 +643,7 @@ function os.loadAPI(_sPath)
     , MAKEBOOTMESG = 1, tostring = 1, tonumber = 1, select = 1
     , coroutine = 1, string = 1, table = 1
     }
-	local function INSPECT_index(tab, index)
+    local function INSPECT_index(tab, index)
         if  not IGNORE_GIND[index] then
             MAKEBOOTMESG("GET AT %s %d as %s", sName, debug.getinfo(2).currentline, index)
         end
@@ -693,17 +727,17 @@ local function load_apis(dir)
 end
 
 -- Load APIs
-load_apis("rom/apis")
+load_apis("/rom/apis")
 
-if  http   then load_apis("rom/apis/http") end
-if  turtle then load_apis("rom/apis/turtle") end
-if  pocket then load_apis("rom/apis/pocket") end
+if  http   then load_apis("/rom/apis/http") end
+if  turtle then load_apis("/rom/apis/turtle") end
+if  pocket then load_apis("/rom/apis/pocket") end
 
 MAKEBOOTMESG("boot 4")
 
-if  (commands and fs.isDir("rom/apis/command")) then
+if  (commands and fs.isDir("/rom/apis/command")) then
     -- Load command APIs
-    if  os.loadAPI("rom/apis/command/commands.lua") then
+    if  os.loadAPI("/rom/apis/command/commands.lua") then
         -- Add a special case-insensitive metatable to the commands api
         local tCaseInsensitiveMetatable = {
             __index = function(table, key)
@@ -854,8 +888,8 @@ if  _CC_DEFAULT_SETTINGS then
 end
 
 -- Load user settings
-if  fs.exists(".settings") then
-    settings.load(".settings")
+if  fs.exists("/.settings") then
+    settings.load("/.settings")
 end
 
 -- Run the shell
