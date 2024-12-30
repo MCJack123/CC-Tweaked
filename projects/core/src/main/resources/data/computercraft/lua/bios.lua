@@ -9,6 +9,70 @@
 -- has not been defined at this point.
 local expect
 
+function MAKEBOOTMESG(format, ...)
+    table.insert(ALLBOOTMESG, string.format(format, ...))
+end
+
+if  not ALLBOOTMESG then
+    ALLBOOTMESG = {}
+    MAKEBOOTMESG("start bios")
+end
+
+MAKEBOOTMESG("loading bios")
+MAKEBOOTMESG("starting with")
+
+--[[
+type
+
+ipairs pairs
+error assert
+tostring tonumber
+getfenv setfenf
+
+unpack select
+setmetatable getmetatable
+
+next
+rawlen
+rawequal
+rawset rawget
+
+xpcall pcall
+load  loadstring
+
+string
+coroutine
+table
+utf8
+math
+bit32
+debug
+
+-- non standart
+fs
+http
+peripheral
+os
+term
+redstone  rs
+
+]]
+
+MAKEBOOTMESG("fs:")
+for k, v in pairs(fs) do
+    --MAKEBOOTMESG("[%s] %s", k, v)
+end
+
+MAKEBOOTMESG("peripheral:")
+for k, v in pairs(peripheral) do
+    --MAKEBOOTMESG("[%s] %s", k, v)
+end
+
+MAKEBOOTMESG("os:")
+for k, v in pairs(os) do
+    --MAKEBOOTMESG("[%s] %s", k, v)
+end
+
 do
     local h = fs.open("rom/modules/main/cc/expect.lua", "r")
     local f, err = loadstring(h.readAll(), "@/rom/modules/main/cc/expect.lua")
@@ -420,9 +484,11 @@ function read(_sReplaceChar, _tHistory, _fnComplete, _sDefault)
     return sLine
 end
 
+MAKEBOOTMESG("boot 1")
+
 function loadfile(filename, mode, env)
     -- Support the previous `loadfile(filename, env)` form instead.
-    if type(mode) == "table" and env == nil then
+    if  ((type(mode) == "table") and (env == nil)) then
         mode, env = nil, mode
     end
 
@@ -431,7 +497,7 @@ function loadfile(filename, mode, env)
     expect(3, env, "table", "nil")
 
     local file = fs.open(filename, "r")
-    if not file then return nil, "File not found" end
+    if  not file then return nil, "File not found" end
 
     local func, err = load(file.readAll(), "@/" .. fs.combine(filename), mode, env)
     file.close()
@@ -442,7 +508,7 @@ function dofile(_sFile)
     expect(1, _sFile, "string")
 
     local fnFile, e = loadfile(_sFile, nil, _G)
-    if fnFile then
+    if  fnFile then
         return fnFile()
     else
         error(e, 2)
@@ -457,66 +523,75 @@ function os.run(_tEnv, _sPath, ...)
     local tEnv = _tEnv
     setmetatable(tEnv, { __index = _G })
 
-    if settings.get("bios.strict_globals", false) then
+    if  settings.get("bios.strict_globals", false) then
         -- load will attempt to set _ENV on this environment, which
         -- throws an error with this protection enabled. Thus we set it here first.
         tEnv._ENV = tEnv
         getmetatable(tEnv).__newindex = function(_, name)
-          error("Attempt to create global " .. tostring(name), 2)
+            error("Attempt to create global " .. tostring(name), 2)
         end
     end
 
     local fnFile, err = loadfile(_sPath, nil, tEnv)
-    if fnFile then
+    if  fnFile then
         local ok, err = pcall(fnFile, ...)
-        if not ok then
-            if err and err ~= "" then
+        if  not ok then
+            if  (err and (err ~= "")) then
                 printError(err)
             end
             return false
         end
         return true
     end
-    if err and err ~= "" then
+    if  (err and (err ~= "")) then
         printError(err)
     end
     return false
 end
 
+MAKEBOOTMESG("boot 2")
+
 local tAPIsLoading = {}
 function os.loadAPI(_sPath)
     expect(1, _sPath, "string")
     local sName = fs.getName(_sPath)
-    if sName:sub(-4) == ".lua" then
+    if  (sName:sub(-4) == ".lua") then
         sName = sName:sub(1, -5)
     end
-    if tAPIsLoading[sName] == true then
+    if  (tAPIsLoading[sName] == true) then
         printError("API " .. sName .. " is already being loaded")
         return false
     end
     tAPIsLoading[sName] = true
 
     local tEnv = {}
-    setmetatable(tEnv, { __index = _G })
+    setmetatable(tEnv, { __index = _G
+                       , __newindex = function (...)
+                                          MAKEBOOTMESG("SET AT %s %d", sName, debug.getinfo(2).currentline)
+                                          rawset(...)
+                                      end
+                       }
+                )
     local fnAPI, err = loadfile(_sPath, nil, tEnv)
-    if fnAPI then
-        local ok, err = pcall(fnAPI)
-        if not ok then
-            tAPIsLoading[sName] = nil
-            return error("Failed to load API " .. sName .. " due to " .. err, 1)
-        end
-    else
+    if  not fnAPI then
         tAPIsLoading[sName] = nil
-        return error("Failed to load API " .. sName .. " due to " .. err, 1)
+        return error(("Failed to load API " .. sName .. ": " .. err):sub(80), 1)
     end
-
-    local tAPI = {}
-    for k, v in pairs(tEnv) do
-        if k ~= "_ENV" then
-            tAPI[k] =  v
+    local ok, tAPI = pcall(fnAPI)
+    if  not ok then
+        tAPIsLoading[sName] = nil
+        return error("Failed to load API " .. sName .. ": " .. tAPI, 1)
+    end
+    
+    if  not tAPI then
+        MAKEBOOTMESG("API %s old", sName)
+        tAPI = {}
+        for k, v in pairs(tEnv) do
+            if  (k ~= "_ENV") then
+                tAPI[k] =  v
+            end
         end
     end
-
     _G[sName] = tAPI
     tAPIsLoading[sName] = nil
     return true
@@ -524,7 +599,7 @@ end
 
 function os.unloadAPI(_sName)
     expect(1, _sName, "string")
-    if _sName ~= "_G" and type(_G[_sName]) == "table" then
+    if  ((_sName ~= "_G") and (type(_G[_sName]) == "table")) then
         _G[_sName] = nil
     end
 end
@@ -551,16 +626,16 @@ end
 
 local bAPIError = false
 
+MAKEBOOTMESG("boot 3")
+
 local function load_apis(dir)
-    if not fs.isDir(dir) then return end
+    if  not fs.isDir(dir) then return end
 
     for _, file in ipairs(fs.list(dir)) do
-        if file:sub(1, 1) ~= "." then
+        if  (file:sub(1, 1) ~= ".") then
             local path = fs.combine(dir, file)
-            if not fs.isDir(path) then
-                if not os.loadAPI(path) then
-                    bAPIError = true
-                end
+            if  not (fs.isDir(path) or os.loadAPI(path)) then
+                bAPIError = true
             end
         end
     end
@@ -568,23 +643,26 @@ end
 
 -- Load APIs
 load_apis("rom/apis")
-if http then load_apis("rom/apis/http") end
-if turtle then load_apis("rom/apis/turtle") end
-if pocket then load_apis("rom/apis/pocket") end
 
-if commands and fs.isDir("rom/apis/command") then
+if  http   then load_apis("rom/apis/http") end
+if  turtle then load_apis("rom/apis/turtle") end
+if  pocket then load_apis("rom/apis/pocket") end
+
+MAKEBOOTMESG("boot 4")
+
+if  (commands and fs.isDir("rom/apis/command")) then
     -- Load command APIs
-    if os.loadAPI("rom/apis/command/commands.lua") then
+    if  os.loadAPI("rom/apis/command/commands.lua") then
         -- Add a special case-insensitive metatable to the commands api
         local tCaseInsensitiveMetatable = {
             __index = function(table, key)
                 local value = rawget(table, key)
-                if value ~= nil then
+                if  (value ~= nil) then
                     return value
                 end
-                if type(key) == "string" then
+                if  (type(key) == "string") then
                     local value = rawget(table, string.lower(key))
-                    if value ~= nil then
+                    if  (value ~= nil) then
                         return value
                     end
                 end
@@ -601,7 +679,9 @@ if commands and fs.isDir("rom/apis/command") then
     end
 end
 
-if bAPIError then
+MAKEBOOTMESG("boot 5")
+
+if  bAPIError then
     print("Press any key to continue")
     os.pullEvent("key")
     term.clear()
@@ -690,30 +770,30 @@ settings.define("shell.autocomplete_hidden", {
     type = "boolean",
 })
 
-if term.isColour() then
+if  term.isColour() then
     settings.define("bios.use_multishell", {
         default = true,
         description = [[Allow running multiple programs at once, through the use of the "fg" and "bg" programs.]],
         type = "boolean",
     })
 end
-if _CC_DEFAULT_SETTINGS then
+if  _CC_DEFAULT_SETTINGS then
     for sPair in string.gmatch(_CC_DEFAULT_SETTINGS, "[^,]+") do
         local sName, sValue = string.match(sPair, "([^=]*)=(.*)")
-        if sName and sValue then
+        if  (sName and sValue) then
             local value
-            if sValue == "true" then
+            if    (sValue == "true") then
                 value = true
-            elseif sValue == "false" then
+            elseif(sValue == "false") then
                 value = false
-            elseif sValue == "nil" then
+            elseif(sValue == "nil") then
                 value = nil
             elseif tonumber(sValue) then
                 value = tonumber(sValue)
             else
                 value = sValue
             end
-            if value ~= nil then
+            if  (value ~= nil) then
                 settings.set(sName, value)
             else
                 settings.unset(sName)
@@ -723,7 +803,7 @@ if _CC_DEFAULT_SETTINGS then
 end
 
 -- Load user settings
-if fs.exists(".settings") then
+if  fs.exists(".settings") then
     settings.load(".settings")
 end
 
@@ -731,7 +811,7 @@ end
 local ok, err = pcall(parallel.waitForAny,
     function()
         local sShell
-        if term.isColour() and settings.get("bios.use_multishell") then
+        if  (term.isColour() and settings.get("bios.use_multishell")) then
             sShell = "rom/programs/advanced/multishell.lua"
         else
             sShell = "rom/programs/shell.lua"
@@ -744,7 +824,7 @@ local ok, err = pcall(parallel.waitForAny,
 
 -- If the shell errored, let the user read it.
 term.redirect(term.native())
-if not ok then
+if  not ok then
     printError(err)
     pcall(function()
         term.setCursorBlink(false)

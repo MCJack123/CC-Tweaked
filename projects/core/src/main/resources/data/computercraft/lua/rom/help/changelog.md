@@ -1,58 +1,3 @@
-# New features in CC: Tweaked 1.114.2
-
-One bug fix:
-* Fix OpenGL errors when rendering empty monitors.
-
-# New features in CC: Tweaked 1.114.1
-
-Several bug fixes:
-* Fix monitor touch events only firing from one monitor.
-* Fix crash when lectern has no item.
-* Fix cursor not blinking on monitors.
-
-# New features in CC: Tweaked 1.114.0
-
-* Add redstone relay peripheral.
-* Add support for `math.atan(y, x)`.
-* Update several translations.
-
-Several bug fixes:
-* Fix pocket upgrades not appearing after crafting.
-* Cancel `rednet.receive` and `Websocket.receive` timers after a message is received.
-* Fix several issues with parsing and printing large doubles.
-* Fix in-hand pocket computer being blank after changing dimension.
-
-# New features in CC: Tweaked 1.113.1
-
-* Update Japanese translation (konumatakaki).
-* Improve performance of `textutils.urlEncode`.
-
-Several bug fixes:
-* Fix overflow when converting recursive objects from Java to Lua.
-* Fix websocket compression not working under Forge.
-
-# New features in CC: Tweaked 1.113.0
-
-* Allow placing printed pages and books in lecterns.
-
-Several bug fixes:
-* Various documentation fixes (MCJack123)
-* Fix computers and turtles not being dropped when exploded with TNT.
-* Fix crash when turtles are broken while mining a block.
-* Fix pocket computer terminals not updating when in the off-hand.
-
-# New features in CC: Tweaked 1.112.0
-
-* Report a custom error when using `!` instead of `not`.
-* Update several translations (zyxkad, MineKID-LP).
-* Add `cc.strings.split` function.
-
-Several bug fixes:
-* Fix `drive.getAudioTitle` returning `nil` when no disk is inserted.
-* Preserve item data when upgrading pocket computers.
-* Add missing bounds check to `cc.strings.wrap` (Lupus950).
-* Fix modems not moving with Create contraptions.
-
 # New features in CC: Tweaked 1.111.0
 
 * Update several translations (Ale32bit).
@@ -843,7 +788,7 @@ And several bug fixes:
 # New features in CC: Tweaked 1.86.2
 
 * Fix peripheral.getMethods returning an empty table.
-* Update to Minecraft 1.15.2. This is currently alpha-quality and so is missing features and may be unstable.
+* Update to Minecraft 1.15.2. This is currently alpha-quality and so is missing missing features and may be unstable.
 
 # New features in CC: Tweaked 1.86.1
 
@@ -1459,7 +1404,7 @@ And several bug fixes:
 * Turtles can now compare items in their inventories
 * Turtles can place signs with text on them with `turtle.place( [signText] )`
 * Turtles now optionally require fuel items to move, and can refuel themselves
-* The size of the turtle inventory has been increased to 16
+* The size of the the turtle inventory has been increased to 16
 * The size of the turtle screen has been increased
 * New turtle functions: `turtle.compareTo( [slotNum] )`, `turtle.craft()`, `turtle.attack()`, `turtle.attackUp()`, `turtle.attackDown()`, `turtle.dropUp()`, `turtle.dropDown()`, `turtle.getFuelLevel()`, `turtle.refuel()`
 * New disk function: disk.getID()

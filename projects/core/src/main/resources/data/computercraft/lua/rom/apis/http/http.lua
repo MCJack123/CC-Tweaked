@@ -12,7 +12,7 @@
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
 local native = http
-local nativeHTTPRequest = http.request
+local nativeHTTPRequest = native.request
 
 local methods = {
     GET = true, POST = true, HEAD = true,
@@ -61,6 +61,8 @@ local function wrap_request(_url, ...)
     return nil, err
 end
 
+local http = {}
+
 --[[- Make a HTTP GET request to the given url.
 
 @tparam string url   The url to request
@@ -101,7 +103,7 @@ print(request.readAll())
 request.close()
 ```
 ]]
-function get(_url, _headers, _binary)
+function http.get(_url, _headers, _binary)
     if type(_url) == "table" then
         check_request_options(_url, false)
         return wrap_request(_url.url, _url)
@@ -145,7 +147,7 @@ error or connection timeout.
 @changed 1.109.0 The returned response now reads the body as raw bytes, rather
                  than decoding from UTF-8.
 ]]
-function post(_url, _post, _headers, _binary)
+function http.post(_url, _post, _headers, _binary)
     if type(_url) == "table" then
         check_request_options(_url, true)
         return wrap_request(_url.url, _url)
@@ -198,7 +200,7 @@ from above are passed in as fields instead (for instance,
 @changed 1.109.0 The returned response now reads the body as raw bytes, rather
                  than decoding from UTF-8.
 ]]
-function request(_url, _post, _headers, _binary)
+function http.request(_url, _post, _headers, _binary)
     local url
     if type(_url) == "table" then
         check_request_options(_url)
@@ -236,7 +238,7 @@ malformed, or blocked).
 
 @see http.checkURL For a synchronous version.
 ]]
-checkURLAsync = nativeCheckURL
+http.checkURLAsync = nativeCheckURL
 
 --[[- Determine whether a URL can be requested.
 
@@ -261,7 +263,7 @@ print(http.checkURL("not a url"))
 -- => false URL malformed
 ```
 ]]
-function checkURL(_url)
+function http.checkURL(_url)
     expect(1, _url, "string")
     local ok, err = nativeCheckURL(_url)
     if not ok then return ok, err end
@@ -304,7 +306,7 @@ these options behave.
 @see websocket_success
 @see websocket_failure
 ]]
-function websocketAsync(url, headers)
+function http.websocketAsync(url, headers)
     local actual_url
     if type(url) == "table" then
         check_websocket_options(url)
@@ -362,7 +364,7 @@ from above are passed in as fields instead (for instance,
     ws.close()
 
 ]]
-function websocket(url, headers)
+function http.websocket(url, headers)
     local actual_url
     if type(url) == "table" then
         check_websocket_options(url)
@@ -385,3 +387,5 @@ function websocket(url, headers)
         end
     end
 end
+
+return http

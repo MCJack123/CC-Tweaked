@@ -8,7 +8,9 @@
 --
 -- @module io
 
-local expect, type_of = dofile("rom/modules/main/cc/expect.lua").expect, _G.type
+MAKEBOOTMESG("loading io")
+
+local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
 --- If we return nil then close the file, as we've reached the end.
 -- We use this weird wrapper function as we wish to preserve the varargs
@@ -24,7 +26,7 @@ local handleMetatable
 handleMetatable = {
     __name = "FILE*",
     __tostring = function(self)
-        if self._closed then
+        if  self._closed then
             return "file (closed)"
         else
             local hash = tostring(self._handle):match("table: (%x+)")
@@ -40,10 +42,10 @@ handleMetatable = {
         -- @treturn[2] string The reason it could not be closed.
         -- @throws If this handle was already closed.
         close = function(self)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
             if handle.close then
@@ -59,8 +61,8 @@ handleMetatable = {
         --
         -- @throws If the handle has been closed
         flush = function(self)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
             if self._closed then error("attempt to use a closed file", 2) end
 
@@ -94,8 +96,8 @@ handleMetatable = {
         ```
         ]]
         lines = function(self, ...)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
             if self._closed then error("attempt to use a closed file", 2) end
 
@@ -127,22 +129,22 @@ handleMetatable = {
         @treturn (string|nil)... The data read from the file.
         ]]
         read = function(self, ...)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
             if self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if not handle.read and not handle.readLine then return nil, "Not opened for reading" end
+            if  not handle.read and not handle.readLine then return nil, "Not opened for reading" end
 
             local n = select("#", ...)
             local output = {}
             for i = 1, n do
                 local arg = select(i, ...)
                 local res
-                if type_of(arg) == "number" then
+                if  (type(arg) == "number") then
                     if handle.read then res = handle.read(arg) end
-                elseif type_of(arg) == "string" then
+                elseif(type(arg) == "string") then
                     local format = arg:gsub("^%*", ""):sub(1, 1)
 
                     if format == "l" then
@@ -157,7 +159,7 @@ handleMetatable = {
                         error("bad argument #" .. i .. " (invalid format)", 2)
                     end
                 else
-                    error("bad argument #" .. i .. " (string expected, got " .. type_of(arg) .. ")", 2)
+                    error("bad argument #" .. i .. " (string expected, got " .. type(arg) .. ")", 2)
                 end
 
                 output[i] = res
@@ -165,7 +167,7 @@ handleMetatable = {
             end
 
             -- Default to "l" if possible
-            if n == 0 and handle.readLine then return handle.readLine() end
+            if  ((n == 0) and handle.readLine) then return handle.readLine() end
             return table.unpack(output, 1, n)
         end,
 
@@ -187,8 +189,8 @@ handleMetatable = {
         @treturn number The new location of the file cursor.
         ]]
         seek = function(self, whence, offset)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
             if self._closed then error("attempt to use a closed file", 2) end
 
@@ -218,8 +220,8 @@ handleMetatable = {
         -- @treturn[2] string The error message which occurred while writing.
         -- @changed 1.81.0 Multiple arguments are now allowed.
         write = function(self, ...)
-            if type_of(self) ~= "table" or getmetatable(self) ~= handleMetatable then
-                error("bad argument #1 (FILE expected, got " .. type_of(self) .. ")", 2)
+            if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
+                error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
             if self._closed then error("attempt to use a closed file", 2) end
 
@@ -259,19 +261,21 @@ local defaultError = make_file({
 local currentInput = defaultInput
 local currentOutput = defaultOutput
 
+local io = {}
+
 --- A file handle representing the "standard input". Reading from this
 -- file will prompt the user for input.
-stdin = defaultInput
+io.stdin = defaultInput
 
 --- A file handle representing the "standard output". Writing to this
 -- file will display the written text to the screen.
-stdout = defaultOutput
+io.stdout = defaultOutput
 
 --- A file handle representing the "standard error" stream.
 --
 -- One may use this to display error messages, writing to it will display
 -- them on the terminal.
-stderr = defaultError
+io.stderr = defaultError
 
 --- Closes the provided file handle.
 --
@@ -281,11 +285,11 @@ stderr = defaultError
 -- @see Handle:close
 -- @see io.output
 -- @since 1.55
-function close(file)
-    if file == nil then return currentOutput:close() end
+function io.close(file)
+    if  (file == nil) then return currentOutput:close() end
 
-    if type_of(file) ~= "table" or getmetatable(file) ~= handleMetatable then
-        error("bad argument #1 (FILE expected, got " .. type_of(file) .. ")", 2)
+    if  ((type(file) ~= "table") or (getmetatable(file) ~= handleMetatable)) then  -- XXXX
+        error("bad argument #1 (FILE expected, got " .. type(file) .. ")", 2)
     end
     return file:close()
 end
@@ -295,7 +299,7 @@ end
 -- @see Handle:flush
 -- @see io.output
 -- @since 1.55
-function flush()
+function io.flush()
     return currentOutput:flush()
 end
 
@@ -305,15 +309,15 @@ end
 -- @treturn Handle The current input file.
 -- @throws If the provided filename cannot be opened for reading.
 -- @since 1.55
-function input(file)
-    if type_of(file) == "string" then
-        local res, err = open(file, "r")
+function io.input(file)
+    if  (type(file) == "string") then
+        local res, err = io.open(file, "r")
         if not res then error(err, 2) end
         currentInput = res
-    elseif type_of(file) == "table" and getmetatable(file) == handleMetatable then
+    elseif((type(file) == "table") and (getmetatable(file) == handleMetatable)) then  -- XXXX
         currentInput = file
-    elseif file ~= nil then
-        error("bad fileument #1 (FILE expected, got " .. type_of(file) .. ")", 2)
+    elseif(file ~= nil) then
+        error("bad fileument #1 (FILE expected, got " .. type(file) .. ")", 2)
     end
 
     return currentInput
@@ -346,11 +350,11 @@ for line in io.lines("/rom/help/intro.txt") do
 end
 ```
 ]]
-function lines(filename, ...)
+function io.lines(filename, ...)
     expect(1, filename, "string", "nil")
-    if filename then
-        local ok, err = open(filename, "r")
-        if not ok then error(err, 2) end
+    if  filename then
+        local ok, err = io.open(filename, "r")
+        if  not ok then error(err, 2) end
 
         -- We set this magic flag to mark this file as being opened by io.lines and so should be
         -- closed automatically
@@ -380,12 +384,12 @@ end
 -- @treturn[2] nil In case of an error.
 -- @treturn[2] string The reason the file could not be opened.
 -- @changed 1.111.0 Add support for `r+` and `w+`.
-function open(filename, mode)
+function io.open(filename, mode)
     expect(1, filename, "string")
     expect(2, mode, "string", "nil")
 
     local file, err = fs.open(filename, mode or "r")
-    if not file then return nil, err end
+    if  not file then return nil, err end
 
     return make_file(file)
 end
@@ -396,15 +400,15 @@ end
 -- @treturn Handle The current output file.
 -- @throws If the provided filename cannot be opened for writing.
 -- @since 1.55
-function output(file)
-    if type_of(file) == "string" then
-        local res, err = open(file, "wb")
-        if not res then error(err, 2) end
+function io.output(file)
+    if  (type(file) == "string") then
+        local res, err = io.open(file, "wb")
+        if  not res then error(err, 2) end
         currentOutput = res
-    elseif type_of(file) == "table" and getmetatable(file) == handleMetatable then
+    elseif((type(file) == "table") and (getmetatable(file) == handleMetatable)) then  -- XXXX
         currentOutput = file
-    elseif file ~= nil then
-        error("bad argument #1 (FILE expected, got " .. type_of(file) .. ")", 2)
+    elseif(file ~= nil) then
+        error("bad argument #1 (FILE expected, got " .. type(file) .. ")", 2)
     end
 
     return currentOutput
@@ -417,7 +421,7 @@ end
 --
 -- @tparam string ... The formats to read, defaulting to a whole line.
 -- @treturn (string|nil)... The data read, or [`nil`] if nothing can be read.
-function read(...)
+function io.read(...)
     return currentInput:read(...)
 end
 
@@ -427,13 +431,9 @@ end
 -- @param obj The value to check
 -- @treturn string|nil `"file"` if this is an open file, `"closed file"` if it
 -- is a closed file handle, or `nil` if not a file handle.
-function type(obj)
-    if type_of(obj) == "table" and getmetatable(obj) == handleMetatable then
-        if obj._closed then
-            return "closed file"
-        else
-            return "file"
-        end
+function io.type(obj)
+    if  ((type(obj) == "table") and (getmetatable(obj) == handleMetatable)) then  -- XXXX
+        return obj._closed and "closed file" or "file"
     end
     return nil
 end
@@ -445,6 +445,8 @@ end
 --
 -- @tparam string ... The strings to write
 -- @changed 1.81.0 Multiple arguments are now allowed.
-function write(...)
+function io.write(...)
     return currentOutput:write(...)
 end
+
+return io

@@ -35,7 +35,7 @@ local function getFilename(sUrl)
     return sUrl:match("/([^/]+)$")
 end
 
-local function get(url)
+local function get(sUrl)
     -- Check if the URL is valid
     local ok, err = http.checkURL(url)
     if not ok then
@@ -43,12 +43,12 @@ local function get(url)
         return
     end
 
-    write("Connecting to " .. url .. "... ")
+    write("Connecting to " .. sUrl .. "... ")
 
-    local response, err = http.get(url)
+    local response = http.get(sUrl)
     if not response then
-        printError(err)
-        return
+        print("Failed.")
+        return nil
     end
 
     print("Success.")

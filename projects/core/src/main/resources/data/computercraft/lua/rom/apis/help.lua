@@ -9,6 +9,8 @@
 
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
+local help = {}
+
 local sPath = "/rom/help"
 
 --- Returns a colon-separated list of directories where help files are searched
@@ -16,7 +18,7 @@ local sPath = "/rom/help"
 --
 -- @treturn string The current help search path, separated by colons.
 -- @see help.setPath
-function path()
+function help.path()
     return sPath
 end
 
@@ -27,7 +29,7 @@ end
 -- @usage help.setPath( "/disk/help/" )
 -- @usage help.setPath( help.path() .. ":/myfolder/help/" )
 -- @see help.path
-function setPath(_sPath)
+function help.setPath(_sPath)
     expect(1, _sPath, "string")
     sPath = _sPath
 end
@@ -42,7 +44,7 @@ local extensions = { "", ".md", ".txt" }
 -- @usage help.lookup("disk")
 -- @changed 1.80pr1 Now supports finding .txt files.
 -- @changed 1.97.0 Now supports finding Markdown files.
-function lookup(topic)
+function help.lookup(topic)
     expect(1, topic, "string")
     -- Look on the path variable
     for path in string.gmatch(sPath, "[^:]+") do
@@ -63,7 +65,7 @@ end
 --
 -- @treturn table A list of topics in alphabetical order.
 -- @usage help.topics()
-function topics()
+function help.topics()
     -- Add index
     local tItems = {
         ["index"] = true,
@@ -104,7 +106,7 @@ end
 -- @tparam string prefix The prefix to match
 -- @treturn table A list of matching topics.
 -- @since 1.74
-function completeTopic(sText)
+function help.completeTopic(sText)
     expect(1, sText, "string")
     local tTopics = topics()
     local tResults = {}
@@ -116,3 +118,5 @@ function completeTopic(sText)
     end
     return tResults
 end
+
+return help

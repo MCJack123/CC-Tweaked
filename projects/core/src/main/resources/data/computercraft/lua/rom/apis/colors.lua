@@ -140,69 +140,71 @@ i.e. `(red + green + blue) / 3`.
 
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
+local colors = {}
+
 --- White: Written as `0` in paint files and [`term.blit`], has a default
 -- terminal colour of #F0F0F0.
-white = 0x1
+colors.white = 0x1
 
 --- Orange: Written as `1` in paint files and [`term.blit`], has a
 -- default terminal colour of #F2B233.
-orange = 0x2
+colors.orange = 0x2
 
 --- Magenta: Written as `2` in paint files and [`term.blit`], has a
 -- default terminal colour of #E57FD8.
-magenta = 0x4
+colors.magenta = 0x4
 
 --- Light blue: Written as `3` in paint files and [`term.blit`], has a
 -- default terminal colour of #99B2F2.
-lightBlue = 0x8
+colors.lightBlue = 0x8
 
 --- Yellow: Written as `4` in paint files and [`term.blit`], has a
 -- default terminal colour of #DEDE6C.
-yellow = 0x10
+colors.yellow = 0x10
 
 --- Lime: Written as `5` in paint files and [`term.blit`], has a default
 -- terminal colour of #7FCC19.
-lime = 0x20
+colors.lime = 0x20
 
 --- Pink: Written as `6` in paint files and [`term.blit`], has a default
 -- terminal colour of #F2B2CC.
-pink = 0x40
+colors.pink = 0x40
 
 --- Gray: Written as `7` in paint files and [`term.blit`], has a default
 -- terminal colour of #4C4C4C.
-gray = 0x80
+colors.gray = 0x80
 
 --- Light gray: Written as `8` in paint files and [`term.blit`], has a
 -- default terminal colour of #999999.
-lightGray = 0x100
+colors.lightGray = 0x100
 
 --- Cyan: Written as `9` in paint files and [`term.blit`], has a default
 -- terminal colour of #4C99B2.
-cyan = 0x200
+colors.cyan = 0x200
 
 --- Purple: Written as `a` in paint files and [`term.blit`], has a
 -- default terminal colour of #B266E5.
-purple = 0x400
+colors.purple = 0x400
 
 --- Blue: Written as `b` in paint files and [`term.blit`], has a default
 -- terminal colour of #3366CC.
-blue = 0x800
+colors.blue = 0x800
 
 --- Brown: Written as `c` in paint files and [`term.blit`], has a default
 -- terminal colour of #7F664C.
-brown = 0x1000
+colors.brown = 0x1000
 
 --- Green: Written as `d` in paint files and [`term.blit`], has a default
 -- terminal colour of #57A64E.
-green = 0x2000
+colors.green = 0x2000
 
 --- Red: Written as `e` in paint files and [`term.blit`], has a default
 -- terminal colour of #CC4C4C.
-red = 0x4000
+colors.red = 0x4000
 
 --- Black: Written as `f` in paint files and [`term.blit`], has a default
 -- terminal colour of #111111.
-black = 0x8000
+colors.black = 0x8000
 
 --- Combines a set of colors (or sets of colors) into a larger set. Useful for
 -- Bundled Cables.
@@ -215,7 +217,7 @@ black = 0x8000
 -- colors.combine(colors.white, colors.magenta, colours.lightBlue)
 -- -- => 13
 -- ```
-function combine(...)
+function colors.combine(...)
     local r = 0
     for i = 1, select('#', ...) do
         local c = select(i, ...)
@@ -241,7 +243,7 @@ end
 -- colours.subtract(colours.lime, colours.orange, colours.white)
 -- -- => 32
 -- ```
-function subtract(colors, ...)
+function colors.subtract(colors, ...)
     expect(1, colors, "number")
     local r = colors
     for i = 1, select('#', ...) do
@@ -264,7 +266,7 @@ end
 -- colors.test(colors.combine(colors.white, colors.magenta, colours.lightBlue), colors.lightBlue)
 -- -- => true
 -- ```
-function test(colors, color)
+function colors.test(colors, color)
     expect(1, colors, "number")
     expect(2, color, "number")
     return bit32.band(colors, color) == color
@@ -282,7 +284,7 @@ end
 -- -- => 0xb23399
 -- ```
 -- @since 1.81.0
-function packRGB(r, g, b)
+function colors.packRGB(r, g, b)
     expect(1, r, "number")
     expect(2, g, "number")
     expect(3, b, "number")
@@ -305,7 +307,7 @@ end
 -- ```
 -- @see colors.packRGB
 -- @since 1.81.0
-function unpackRGB(rgb)
+function colors.unpackRGB(rgb)
     expect(1, rgb, "number")
     return
         bit32.band(bit32.rshift(rgb, 16), 0xFF) / 255,
@@ -337,7 +339,7 @@ end
 -- ```
 -- @since 1.80pr1
 -- @changed 1.81.0 Deprecated in favor of colors.(un)packRGB.
-function rgb8(r, g, b)
+function colors.rgb8(r, g, b)
     if g == nil and b == nil then
         return unpackRGB(r)
     else
@@ -366,7 +368,7 @@ colors.toBlit(colors.red)
 @see colors.fromBlit
 @since 1.94.0
 ]]
-function toBlit(color)
+function colors.toBlit(color)
     expect(1, color, "number")
     local hex = color_hex_lookup[color]
     if hex then return hex end
@@ -389,7 +391,7 @@ colors.fromBlit("e")
 @see colors.toBlit
 @since 1.105.0
 ]]
-function fromBlit(hex)
+function colors.fromBlit(hex)
     expect(1, hex, "string")
 
     if #hex ~= 1 then return nil end
@@ -398,3 +400,5 @@ function fromBlit(hex)
 
     return 2 ^ value
 end
+
+return colors

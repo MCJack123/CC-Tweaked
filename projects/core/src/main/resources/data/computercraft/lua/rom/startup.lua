@@ -2,6 +2,8 @@
 --
 -- SPDX-License-Identifier: LicenseRef-CCPL
 
+MAKEBOOTMESG("loading startup")
+
 local completion = require "cc.shell.completion"
 
 -- Setup paths

@@ -14,7 +14,124 @@ To help contribute to CC: Tweaked, browse the source code at https://github.com/
 # GitHub
 Numerous people have contributed to CC: Tweaked over the years:
 
-${gitContributors}
+absolument
+Alessandro Proto
+Amelia
+Anavrins
+Andrew71
+Angalexik
+AxelFontarive
+Bartek Bok
+Bilel MEDIMEGH
+BlackDragon-B
+Bluenaxela
+Bomb Bloke
+Boom
+Brady <bradyakent@gmail.com
+Brian C. Lindner
+Charlotte Herngreen
+chesiren
+Chick Chicky
+Christian L.W.
+Cloud Chagnon
+Commandcracker
+CrazedProgrammer
+Cruor
+cyberbit
+daelvn
+Dana Marcuse
+David Isaksson
+David Queneau
+Devilholk
+devomaa
+Drew Edwards
+DrHesperus
+E. Kim
+Edvin
+ego-rick
+Emilis Kiškis
+Emma
+Erlend
+Euric
+exerro
+Fayne Aldan
+FensieRenaud
+gegy1000
+Hasaabitt
+hds
+heap-underflow
+hugeblank
+i develop things
+Iunius118
+Ivo Leal
+JackMacWindows
+Jacob
+JakobDev
+Jared Allard
+Johnny Irvin
+Jonathan Coates
+Jonathan Leitschuh
+Joseph C. Sible
+Jummit
+Kevin Z
+khankul
+Lignum
+lily
+Linus Ramneborg
+liquid
+Logan Davis
+lonevox
+Luca
+Luiz Krüger
+Lupus590
+MAGGen-hub
+magiczocker10
+Marcus
+Matheus Medeiros Souza
+Matthew W
+Matthew Wilbern
+Merith
+MineRobber___T
+MORIMORI0317
+Naheulf
+neumond
+ObloxCC
+Oliver Caha
+Oliver Marks
+ouroborus
+parly
+Paspartout
+Patrick 'Quezler' Mounier
+Patriik
+PenguinEncounter
+Petr Karmashev
+Possseidon
+powerboat9
+R93950X
+ralphgod3
+Restioson
+RobloMinerYT
+roland-a
+RomanPlayer22
+Ronan Hanley
+Sammy
+SkyTheCodeMaster
+Spongecade
+Sr_endi
+Srendi
+Stephen Gibson
+Steven Dirth
+theoriginalbit
+TheWireLord
+Tim Ittermann
+Trenord
+Vexatos
+Virtio
+wackbyte
+Wendelstein7
+Wojbie
+xuyu0v0
+xXTurner
 
 Thank you to everyone who has contributed
 

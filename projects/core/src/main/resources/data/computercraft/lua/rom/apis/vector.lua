@@ -19,7 +19,25 @@ local expect = dofile("rom/modules/main/cc/expect.lua").expect
 local vmetatable
 
 --- A 3-dimensional vector, with `x`, `y`, and `z` values.
+
+local APIvector = {} -- XXXX setmetatable({}, {__index = vector})
+
+--- Construct a new [`Vector`] with the given coordinates.
 --
+-- @tparam number x The X coordinate or direction of the vector.
+-- @tparam number y The Y coordinate or direction of the vector.
+-- @tparam number z The Z coordinate or direction of the vector.
+-- @treturn Vector The constructed vector.
+function APIvector.new(x, y, z)
+    return setmetatable( { x = tonumber(x) or 0
+                         , y = tonumber(y) or 0
+                         , z = tonumber(z) or 0
+                         }
+                       , vmetatable
+                       )
+end
+
+
 -- This is suitable for representing both position and directional vectors.
 --
 -- @type Vector
@@ -32,14 +50,13 @@ local vector = {
     -- @usage v1:add(v2)
     -- @usage v1 + v2
     add = function(self, o)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        if getmetatable(o) ~= vmetatable then expect(2, o, "vector") end
+        if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
+        if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
 
-        return vector.new(
-            self.x + o.x,
-            self.y + o.y,
-            self.z + o.z
-        )
+        return APIvector.new( self.x + other.x
+                            , self.y + other.y
+                            , self.z + other.z
+                            )
     end,
 
     --- Subtracts one vector from another.
@@ -49,15 +66,14 @@ local vector = {
     -- @treturn Vector The resulting vector
     -- @usage v1:sub(v2)
     -- @usage v1 - v2
-    sub = function(self, o)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        if getmetatable(o) ~= vmetatable then expect(2, o, "vector") end
+    sub = function(self, other)
+        if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
+        if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
 
-        return vector.new(
-            self.x - o.x,
-            self.y - o.y,
-            self.z - o.z
-        )
+        return APIvector.new( self.x - other.x
+                            , self.y - other.y
+                            , self.z - other.z
+                            )
     end,
 
     --- Multiplies a vector by a scalar value.
@@ -68,14 +84,13 @@ local vector = {
     -- @usage vector.new(1, 2, 3):mul(3)
     -- @usage vector.new(1, 2, 3) * 3
     mul = function(self, factor)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
         expect(2, factor, "number")
 
-        return vector.new(
-            self.x * factor,
-            self.y * factor,
-            self.z * factor
-        )
+        return APIvector.new( self.x * factor
+                            , self.y * factor
+                            , self.z * factor
+                            )
     end,
 
     --- Divides a vector by a scalar value.
@@ -86,14 +101,13 @@ local vector = {
     -- @usage vector.new(1, 2, 3):div(3)
     -- @usage vector.new(1, 2, 3) / 3
     div = function(self, factor)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
         expect(2, factor, "number")
 
-        return vector.new(
-            self.x / factor,
-            self.y / factor,
-            self.z / factor
-        )
+        return APIvector.new( self.x / factor
+                            , self.y / factor
+                            , self.z / factor
+                            )
     end,
 
     --- Negate a vector
@@ -102,25 +116,27 @@ local vector = {
     -- @treturn Vector The negated vector.
     -- @usage -vector.new(1, 2, 3)
     unm = function(self)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        return vector.new(
-            -self.x,
-            -self.y,
-            -self.z
-        )
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
+        
+        return APIvector.new( -self.x
+                            , -self.y
+                            , -self.z
+                            )
     end,
 
     --- Compute the dot product of two vectors
     --
     -- @tparam Vector self The first vector to compute the dot product of.
     -- @tparam Vector o The second vector to compute the dot product of.
-    -- @treturn number The dot product of `self` and `o`.
+    -- @treturn Vector The dot product of `self` and `o`.
     -- @usage v1:dot(v2)
-    dot = function(self, o)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        if getmetatable(o) ~= vmetatable then expect(2, o, "vector") end
+    dot = function(self, other)
+        if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
+        if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
 
-        return self.x * o.x + self.y * o.y + self.z * o.z
+        return self.x * other.x
+             + self.y * other.y
+             + self.z * other.z
     end,
 
     --- Compute the cross product of two vectors
@@ -129,22 +145,22 @@ local vector = {
     -- @tparam Vector o The second vector to compute the cross product of.
     -- @treturn Vector The cross product of `self` and `o`.
     -- @usage v1:cross(v2)
-    cross = function(self, o)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        if getmetatable(o) ~= vmetatable then expect(2, o, "vector") end
+    cross = function(self, other)
+        if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
+        if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
 
-        return vector.new(
-            self.y * o.z - self.z * o.y,
-            self.z * o.x - self.x * o.z,
-            self.x * o.y - self.y * o.x
-        )
+        return APIvector.new( self.y * other.z - self.z * other.y
+                            , self.z * other.x - self.x * other.z
+                            , self.x * other.y - self.y * other.x
+                            )
     end,
 
     --- Get the length (also referred to as magnitude) of this vector.
     -- @tparam Vector self This vector.
     -- @treturn number The length of this vector.
     length = function(self)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
+        
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
     end,
 
@@ -155,6 +171,8 @@ local vector = {
     -- @treturn Vector The normalised vector
     -- @usage v:normalize()
     normalize = function(self)
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
+        
         return self:mul(1 / self:length())
     end,
 
@@ -166,15 +184,28 @@ local vector = {
     -- nearest 0.5.
     -- @treturn Vector The rounded vector.
     round = function(self, tolerance)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
         expect(2, tolerance, "number", "nil")
-
+        
         tolerance = tolerance or 1.0
-        return vector.new(
-            math.floor((self.x + tolerance * 0.5) / tolerance) * tolerance,
-            math.floor((self.y + tolerance * 0.5) / tolerance) * tolerance,
-            math.floor((self.z + tolerance * 0.5) / tolerance) * tolerance
-        )
+        return APIvector.new( math.floor((self.x + tolerance * 0.5) / tolerance) * tolerance
+                            , math.floor((self.y + tolerance * 0.5) / tolerance) * tolerance
+                            , math.floor((self.z + tolerance * 0.5) / tolerance) * tolerance
+                            )
+    end,
+
+    --- Check for equality between two vectors.
+    --
+    -- @tparam Vector self The first vector to compare.
+    -- @tparam Vector other The second vector to compare to.
+    -- @treturn boolean Whether or not the vectors are equal.
+    equals = function(self, other)
+        if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
+        if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
+
+        return self.x == other.x
+           and self.y == other.y
+           and self.z == other.z
     end,
 
     --- Convert this vector into a string, for pretty printing.
@@ -184,46 +215,22 @@ local vector = {
     -- @usage v:tostring()
     -- @usage tostring(v)
     tostring = function(self)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-
+        if  (getmetatable(self) ~= vmetatable) then expect(1, self, "vector") end
+        
         return self.x .. "," .. self.y .. "," .. self.z
     end,
-
-    --- Check for equality between two vectors.
-    --
-    -- @tparam Vector self The first vector to compare.
-    -- @tparam Vector other The second vector to compare to.
-    -- @treturn boolean Whether or not the vectors are equal.
-    equals = function(self, other)
-        if getmetatable(self) ~= vmetatable then expect(1, self, "vector") end
-        if getmetatable(other) ~= vmetatable then expect(2, other, "vector") end
-
-        return self.x == other.x and self.y == other.y and self.z == other.z
-    end,
 }
 
-vmetatable = {
-    __name = "vector",
-    __index = vector,
-    __add = vector.add,
-    __sub = vector.sub,
-    __mul = vector.mul,
-    __div = vector.div,
-    __unm = vector.unm,
-    __tostring = vector.tostring,
-    __eq = vector.equals,
+vmetatable =
+{ __name = "vector"
+, __index = vector
+, __add = vector.add
+, __sub = vector.sub
+, __mul = vector.mul
+, __div = vector.div
+, __unm = vector.unm
+, __eq = vector.equals
+, __tostring = vector.tostring
 }
 
---- Construct a new [`Vector`] with the given coordinates.
---
--- @tparam number x The X coordinate or direction of the vector.
--- @tparam number y The Y coordinate or direction of the vector.
--- @tparam number z The Z coordinate or direction of the vector.
--- @treturn Vector The constructed vector.
-function new(x, y, z)
-    return setmetatable({
-        x = tonumber(x) or 0,
-        y = tonumber(y) or 0,
-        z = tonumber(z) or 0,
-    }, vmetatable)
-end
+return APIvector

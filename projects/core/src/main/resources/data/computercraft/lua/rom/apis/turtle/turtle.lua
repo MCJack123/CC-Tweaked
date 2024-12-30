@@ -12,14 +12,15 @@ end
 --
 -- @deprecated Historically this table behaved differently to the main turtle API, but this is no longer the case. You
 -- should not need to use it.
-native = turtle.native or turtle
+local native = turtle.native or turtle
 
+-- XXXX what if workbench was taken by player?
 local function addCraftMethod(object)
-    if peripheral.getType("left") == "workbench" then
+    if  (peripheral.getType("left") == "workbench") then
         object.craft = function(...)
             return peripheral.call("left", "craft", ...)
         end
-    elseif peripheral.getType("right") == "workbench" then
+    elseif(peripheral.getType("right") == "workbench") then
         object.craft = function(...)
             return peripheral.call("right", "craft", ...)
         end
@@ -28,17 +29,19 @@ local function addCraftMethod(object)
     end
 end
 
--- Put commands into environment table
-local env = _ENV
+local turtle = {native = native}
+
 for k, v in pairs(native) do
-    if k == "equipLeft" or k == "equipRight" then
-        env[k] = function(...)
+    if  ((k == "equipLeft") or (k == "equipRight")) then
+        turtle[k] = function(...)
             local result, err = v(...)
             addCraftMethod(turtle)
             return result, err
         end
     else
-        env[k] = v
+        turtle[k] = v
     end
 end
-addCraftMethod(env)
+addCraftMethod(turtle)
+
+return turtle

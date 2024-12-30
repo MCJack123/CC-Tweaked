@@ -23,7 +23,7 @@ just the same. For example, you might build a GPS cluster according to [this
 tutorial][1], using z to account for height, or you might use y to account for
 height in the way that Minecraft's debug screen displays.
 
-[1]: https://ccf.squiddev.cc/forums2/index.php?/topic/3088-how-to-guide-gps-global-position-system/
+[1]: http://www.computercraft.info/forums2/index.php?/topic/3088-how-to-guide-gps-global-position-system/
 
 @module gps
 @since 1.31
@@ -32,8 +32,10 @@ height in the way that Minecraft's debug screen displays.
 
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
+local gps = {}
+
 --- The channel which GPS requests and responses are broadcast on.
-CHANNEL_GPS = 65534
+gps.CHANNEL_GPS = 65534
 
 local function trilaterate(A, B, C)
     local a2b = B.vPosition - A.vPosition
@@ -98,7 +100,7 @@ end
 -- @treturn[1] number This computer's `y` position.
 -- @treturn[1] number This computer's `z` position.
 -- @treturn[2] nil If the position could not be established.
-function locate(_nTimeout, _bDebug)
+function gps.locate(_nTimeout, _bDebug)
     expect(1, _nTimeout, "number", "nil")
     expect(2, _bDebug, "boolean", "nil")
     -- Let command computers use their magic fourth-wall-breaking special abilities
@@ -196,8 +198,6 @@ function locate(_nTimeout, _bDebug)
         modem.close(CHANNEL_GPS)
     end
 
-    os.cancelTimer(timeout)
-
     -- Return the response
     if pos1 and pos2 then
         if _bDebug then
@@ -217,3 +217,5 @@ function locate(_nTimeout, _bDebug)
         return nil
     end
 end
+
+return gps

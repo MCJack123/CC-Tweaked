@@ -4,6 +4,8 @@
 
 --- @module term
 
+MAKEBOOTMESG("loading term")
+
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
 local native = term.native and term.native() or term
@@ -15,7 +17,7 @@ local function wrap(_sFunction)
     end
 end
 
-local term = _ENV
+local term = {}
 
 --- Redirects terminal output to a monitor, a [`window`], or any other custom
 -- terminal object. Once the redirect is performed, any calls to a "term"
@@ -37,17 +39,18 @@ local term = _ENV
 -- Redirect to a monitor on the right of the computer.
 --
 --     term.redirect(peripheral.wrap("right"))
-term.redirect = function(target)
+function term.redirect(target)
     expect(1, target, "table")
-    if target == term or target == _G.term then
+    if  ((target == term) or (target == _G.term)) then
         error("term is not a recommended redirect target, try term.current() instead", 2)
     end
     for k, v in pairs(native) do
-        if type(k) == "string" and type(v) == "function" then
-            if type(target[k]) ~= "function" then
-                target[k] = function()
-                    error("Redirect object is missing method " .. k .. ".", 2)
-                end
+        if  (   (type(k) == "string")
+            and (type(v) == "function")
+            and (type(target[k]) ~= "function")
+            ) then
+            target[k] = function()
+                error("Redirect object is missing method " .. k .. ".", 2)
             end
         end
     end
@@ -64,7 +67,7 @@ end
 -- Create a new [`window`] which draws to the current redirect target.
 --
 --     window.create(term.current(), 1, 1, 10, 10)
-term.current = function()
+function term.current()
     return redirectTarget
 end
 
@@ -76,19 +79,25 @@ end
 --
 -- @treturn Redirect The native terminal redirect.
 -- @since 1.6
-term.native = function()
+function term.native()
+    MAKEBOOTMESG("loading term 2?")
     return native
 end
 
 -- Some methods shouldn't go through redirects, so we move them to the main
 -- term API.
-for _, method in ipairs { "nativePaletteColor", "nativePaletteColour" } do
+for _, method in ipairs{ "nativePaletteColor", "nativePaletteColour" } do
     term[method] = native[method]
     native[method] = nil
 end
 
 for k, v in pairs(native) do
-    if type(k) == "string" and type(v) == "function" and rawget(term, k) == nil then
+    if  (   (type(k) == "string")
+        and (type(v) == "function")
+        and (term[k] == nil)
+        ) then
         term[k] = wrap(k)
     end
 end
+
+return term

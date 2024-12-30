@@ -96,8 +96,12 @@ speaker.playNote("harp")
 
 local expect = dofile("rom/modules/main/cc/expect.lua").expect
 
+MAKEBOOTMESG("loading peripheral")
+
 local native = peripheral
 local sides = rs.getSides()
+
+local peripheral = {}
 
 --- Provides a list of all peripherals available.
 --
@@ -107,13 +111,12 @@ local sides = rs.getSides()
 --
 -- @treturn { string... } A list of the names of all attached peripherals.
 -- @since 1.51
-function getNames()
+function peripheral.getNames()
     local results = {}
-    for n = 1, #sides do
-        local side = sides[n]
-        if native.isPresent(side) then
+    for _, side in ipairs(sides) do
+        if  native.isPresent(side) then
             table.insert(results, side)
-            if native.hasType(side, "peripheral_hub") then
+            if  native.hasType(side, "peripheral_hub") then
                 local remote = native.call(side, "getNamesRemote")
                 for _, name in ipairs(remote) do
                     table.insert(results, name)
@@ -130,15 +133,16 @@ end
 -- @treturn boolean If a peripheral is present with the given name.
 -- @usage peripheral.isPresent("top")
 -- @usage peripheral.isPresent("monitor_0")
-function isPresent(name)
+function peripheral.isPresent(name)
     expect(1, name, "string")
-    if native.isPresent(name) then
+    if  native.isPresent(name) then
         return true
     end
 
-    for n = 1, #sides do
-        local side = sides[n]
-        if native.hasType(side, "peripheral_hub") and native.call(side, "isPresentRemote", name) then
+    for _, side in ipairs(sides) do
+        if  ( native.hasType(side, "peripheral_hub")
+            and native.call(side, "isPresentRemote", name)
+            ) then
             return true
         end
     end
@@ -156,22 +160,23 @@ wrapped peripheral instance.
 
     peripheral.getType("top")
 ]]
-function getType(peripheral)
-    expect(1, peripheral, "string", "table")
-    if type(peripheral) == "string" then -- Peripheral name passed
-        if native.isPresent(peripheral) then
-            return native.getType(peripheral)
+function peripheral.getType(periph)
+    expect(1, periph, "string", "table")
+    if  (type(periph) == "string") then -- Peripheral name passed
+        if  native.isPresent(periph) then
+            return native.getType(periph)
         end
-        for n = 1, #sides do
-            local side = sides[n]
-            if native.hasType(side, "peripheral_hub") and native.call(side, "isPresentRemote", peripheral) then
-                return native.call(side, "getTypeRemote", peripheral)
+        for _, side in ipairs(sides) do
+            if  (   native.hasType(side, "peripheral_hub")
+                and native.call(side, "isPresentRemote", periph)
+                ) then
+                return native.call(side, "getTypeRemote", periph)
             end
         end
         return nil
     else
-        local mt = getmetatable(peripheral)
-        if not mt or mt.__name ~= "peripheral" or type(mt.types) ~= "table" then
+        local mt = getmetatable(periph)
+        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then
             error("bad argument #1 (table is not a peripheral)", 2)
         end
         return table.unpack(mt.types)
@@ -186,26 +191,27 @@ end
 @treturn boolean|nil If a peripheral has a particular type, or `nil` if it is not present.
 @since 1.99
 ]]
-function hasType(peripheral, peripheral_type)
-    expect(1, peripheral, "string", "table")
-    expect(2, peripheral_type, "string")
-    if type(peripheral) == "string" then -- Peripheral name passed
-        if native.isPresent(peripheral) then
-            return native.hasType(peripheral, peripheral_type)
+function peripheral.hasType(periph, periph_type)
+    expect(1, periph, "string", "table")
+    expect(2, periph_type, "string")
+    if  (type(periph) == "string") then -- Peripheral name passed
+        if  native.isPresent(periph) then
+            return native.hasType(periph, periph_type)
         end
-        for n = 1, #sides do
-            local side = sides[n]
-            if native.hasType(side, "peripheral_hub") and native.call(side, "isPresentRemote", peripheral) then
-                return native.call(side, "hasTypeRemote", peripheral, peripheral_type)
+        for _, side in ipairs(sides) do
+            if  (   native.hasType(side, "peripheral_hub")
+                and native.call(side, "isPresentRemote", periph)
+                ) then
+                return native.call(side, "hasTypeRemote", periph, periph_type)
             end
         end
         return nil
     else
-        local mt = getmetatable(peripheral)
-        if not mt or mt.__name ~= "peripheral" or type(mt.types) ~= "table" then
+        local mt = getmetatable(periph)
+        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then
             error("bad argument #1 (table is not a peripheral)", 2)
         end
-        return mt.types[peripheral_type] ~= nil
+        return mt.types[periph_type] ~= nil
     end
 end
 
@@ -214,14 +220,15 @@ end
 -- @tparam string name The name of the peripheral to find.
 -- @treturn { string... }|nil A list of methods provided by this peripheral, or `nil` if
 -- it is not present.
-function getMethods(name)
+function peripheral.getMethods(name)
     expect(1, name, "string")
-    if native.isPresent(name) then
+    if  native.isPresent(name) then
         return native.getMethods(name)
     end
-    for n = 1, #sides do
-        local side = sides[n]
-        if native.hasType(side, "peripheral_hub") and native.call(side, "isPresentRemote", name) then
+    for _, side in ipairs(sides) do
+        if  (   native.hasType(side, "peripheral_hub")
+            and native.call(side, "isPresentRemote", name)
+            ) then
             return native.call(side, "getMethodsRemote", name)
         end
     end
@@ -233,10 +240,10 @@ end
 -- @tparam table peripheral The peripheral to get the name of.
 -- @treturn string The name of the given peripheral.
 -- @since 1.88.0
-function getName(peripheral)
-    expect(1, peripheral, "table")
-    local mt = getmetatable(peripheral)
-    if not mt or mt.__name ~= "peripheral" or type(mt.name) ~= "string" then
+function peripheral.getName(periph)
+    expect(1, periph, "table")
+    local mt = getmetatable(periph)
+    if  (not mt or (mt.__name ~= "peripheral") or (type(mt.name) ~= "string")) then
         error("bad argument #1 (table is not a peripheral)", 2)
     end
     return mt.name
@@ -252,16 +259,17 @@ end
 -- @usage Open the modem on the top of this computer.
 --
 --     peripheral.call("top", "open", 1)
-function call(name, method, ...)
+function peripheral.call(name, method, ...)
     expect(1, name, "string")
     expect(2, method, "string")
-    if native.isPresent(name) then
+    if  native.isPresent(name) then
         return native.call(name, method, ...)
     end
 
-    for n = 1, #sides do
-        local side = sides[n]
-        if native.hasType(side, "peripheral_hub") and native.call(side, "isPresentRemote", name) then
+    for _, side in ipairs(sides) do
+        if  (   native.hasType(side, "peripheral_hub")
+            and native.call(side, "isPresentRemote", name)
+            ) then
             return native.call(side, "callRemote", name, method, ...)
         end
     end
@@ -278,17 +286,19 @@ end
 --
 --     local modem = peripheral.wrap("top")
 --     modem.open(1)
-function wrap(name)
+function peripheral.wrap(name)
     expect(1, name, "string")
 
     local methods = peripheral.getMethods(name)
-    if not methods then
+    if  not methods then
         return nil
     end
 
     -- We store our types array as a list (for getType) and a lookup table (for hasType).
     local types = { peripheral.getType(name) }
-    for i = 1, #types do types[types[i]] = true end
+    for i = 1, #types do
+        types[types[i]] = true
+    end
     local result = setmetatable({}, {
         __name = "peripheral",
         name = name,
@@ -329,18 +339,20 @@ and returns if it should be included in the result.
     peripheral.find("modem", rednet.open)
 @since 1.6
 ]]
-function find(ty, filter)
+function peripheral.find(ty, filter)
     expect(1, ty, "string")
     expect(2, filter, "function", "nil")
 
     local results = {}
     for _, name in ipairs(peripheral.getNames()) do
-        if peripheral.hasType(name, ty) then
+        if  peripheral.hasType(name, ty) then
             local wrapped = peripheral.wrap(name)
-            if filter == nil or filter(name, wrapped) then
+            if  ((filter == nil) or filter(name, wrapped)) then
                 table.insert(results, wrapped)
             end
         end
     end
     return table.unpack(results)
 end
+
+return peripheral

@@ -8,7 +8,7 @@
 -- @module colours
 -- @since 1.2
 
-local colours = _ENV
+local colours = {}
 for k, v in pairs(colors) do
     colours[k] = v
 end
@@ -26,3 +26,5 @@ colours.gray = nil --- @local
 -- @see colors.lightGray
 colours.lightGrey = colors.lightGray
 colours.lightGray = nil --- @local
+
+return colours

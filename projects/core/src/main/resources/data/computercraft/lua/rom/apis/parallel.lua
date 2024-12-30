@@ -96,6 +96,8 @@ local function runUntilLimit(_routines, _limit)
     end
 end
 
+local parrallel = {}
+
 --[[- Switches between execution of the functions, until any of them
 finishes. If any of the functions errors, the message is propagated upwards
 from the [`parallel.waitForAny`] call.
@@ -119,7 +121,7 @@ from the [`parallel.waitForAny`] call.
     parallel.waitForAny(tick, wait_for_q)
     print("Everything done!")
 ]]
-function waitForAny(...)
+function parrallel.waitForAny(...)
     local routines = create(...)
     return runUntilLimit(routines, #routines - 1)
 end
@@ -143,7 +145,9 @@ from the [`parallel.waitForAll`] call.
     parallel.waitForAll(a, b)
     print("Everything done!")
 ]]
-function waitForAll(...)
+function parrallel.waitForAll(...)
     local routines = create(...)
     return runUntilLimit(routines, 0)
 end
+
+return parrallel

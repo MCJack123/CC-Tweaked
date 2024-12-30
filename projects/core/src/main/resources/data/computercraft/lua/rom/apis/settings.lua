@@ -34,19 +34,25 @@ local type, expect, field = type, expect.expect, expect.field
 local details, values = {}, {}
 
 local function reserialize(value)
-    if type(value) ~= "table" then return value end
+    if  (type(value) ~= "table") then return value end
     return textutils.unserialize(textutils.serialize(value))
 end
 
 local function copy(value)
-    if type(value) ~= "table" then return value end
+    if  (type(value) ~= "table") then return value end
     local result = {}
-    for k, v in pairs(value) do result[k] = copy(v) end
+    for k, v in pairs(value) do
+        result[k] = copy(v)
+    end
     return result
 end
 
 local valid_types = { "number", "string", "boolean", "table" }
-for _, v in ipairs(valid_types) do valid_types[v] = true end
+for _, v in ipairs(valid_types) do
+    valid_types[v] = true
+end
+
+local settings = {}
 
 --- Define a new setting, optional specifying various properties about it.
 --
@@ -63,25 +69,27 @@ for _, v in ipairs(valid_types) do valid_types[v] = true end
 --  - `type`: Require values to be of this type. [Setting][`set`] the value to another type
 --    will error.
 -- @since 1.87.0
-function define(name, options)
+function settings.define(name, options)
     expect(1, name, "string")
     expect(2, options, "table", "nil")
 
-    if options then
-        options = {
-            description = field(options, "description", "string", "nil"),
-            default = reserialize(field(options, "default", "number", "string", "boolean", "table", "nil")),
-            type = field(options, "type", "string", "nil"),
-        }
-
-        if options.type and not valid_types[options.type] then
-            error(("Unknown type %q. Expected one of %s."):format(options.type, table.concat(valid_types, ", ")), 2)
-        end
-    else
-        options = {}
+    if  not options then
+        details[name] = {}
+        return
     end
-
-    details[name] = options
+    if  (options.type and not valid_types[options.type]) then
+        error( string.format( "Unknown type %q. Expected one of %s."
+                            , options.type
+                            , table.concat(valid_types, ", ")
+                            )
+             , 2
+             ) -- XXXX errorf
+    end
+    details[name] =
+    { description = field(options, "description", "string", "nil")
+    , type = field(options, "type", "string", "nil")
+    , default = reserialize(field(options, "default", "number", "string", "boolean", "table", "nil"))
+    }
 end
 
 --- Remove a [definition][`define`] of a setting.
@@ -91,20 +99,20 @@ end
 --
 -- @tparam string name The name of this option
 -- @since 1.87.0
-function undefine(name)
+function settings.undefine(name)
     expect(1, name, "string")
     details[name] = nil
 end
 
 local function set_value(name, new)
     local old = values[name]
-    if old == nil then
+    if  (old == nil) then
         local opt = details[name]
         old = opt and opt.default
     end
 
     values[name] = new
-    if old ~= new then
+    if  (old ~= new) then
         -- This should be safe, as os.queueEvent copies values anyway.
         os.queueEvent("setting_changed", name, new, old)
     end
@@ -122,12 +130,14 @@ serialisable by [`textutils.serialize`].
 @throws If this value cannot be serialised
 @see settings.unset
 ]]
-function set(name, value)
+function settings.set(name, value)
     expect(1, name, "string")
     expect(2, value, "number", "string", "boolean", "table")
 
     local opt = details[name]
-    if opt and opt.type then expect(2, value, opt.type) end
+    if  (opt and opt.type) then
+        expect(2, value, opt.type)
+    end
 
     set_value(name, reserialize(value))
 end
@@ -140,12 +150,12 @@ end
 -- or `nil` otherwise.
 -- @return The setting's, or the default if the setting has not been changed.
 -- @changed 1.87.0 Now respects default value if pre-defined and `default` is unset.
-function get(name, default)
+function settings.get(name, default)
     expect(1, name, "string")
     local result = values[name]
-    if result ~= nil then
+    if  (result ~= nil) then
         return copy(result)
-    elseif default ~= nil then
+    elseif(default ~= nil) then
         return default
     else
         local opt = details[name]
@@ -160,12 +170,14 @@ end
 -- Information about this setting. This includes all information from [`settings.define`],
 -- as well as this setting's value.
 -- @since 1.87.0
-function getDetails(name)
+function settings.getDetails(name)
     expect(1, name, "string")
     local deets = copy(details[name]) or {}
     deets.value = values[name]
     deets.changed = deets.value ~= nil
-    if deets.value == nil then deets.value = deets.default end
+    if  (deets.value == nil) then
+        deets.value = deets.default
+    end
     return deets
 end
 
@@ -177,7 +189,7 @@ end
 -- @tparam string name The name of the setting to unset.
 -- @see settings.set
 -- @see settings.clear
-function unset(name)
+function settings.unset(name)
     expect(1, name, "string")
     set_value(name, nil)
 end
@@ -186,7 +198,7 @@ end
 -- on every setting.
 --
 -- @see settings.unset
-function clear()
+function settings.clear()
     for name in pairs(values) do
         set_value(name, nil)
     end
@@ -196,15 +208,17 @@ end
 --
 -- @treturn { string } An alphabetically sorted list of all currently-defined
 -- settings.
-function getNames()
-    local result, n = {}, 1
+function settings.getNames()
+    local result = {} -- local result, n = {}, 1   XXXX makes difference with nil's
     for k in pairs(details) do
-        result[n], n = k, n + 1
+        table.insert(result, k) -- result[n], n = k, n + 1
     end
     for k in pairs(values) do
-        if not details[k] then result[n], n = k, n + 1 end
+        if  not details[k] then
+            table.insert(result, k) -- result[n], n = k, n + 1
+        end
     end
-    table.sort(result)
+    table.sort(result) -- XXXX this hovever cannot handle nil's
     return result
 end
 
@@ -220,10 +234,10 @@ end
 --
 -- @see settings.save
 -- @changed 1.87.0 `path` is now optional.
-function load(path)
+function settings.load(path)
     expect(1, path, "string", "nil")
     local file = fs.open(path or ".settings", "r")
-    if not file then
+    if  not file then
         return false
     end
 
@@ -231,18 +245,29 @@ function load(path)
     file.close()
 
     local tFile = textutils.unserialize(sText)
-    if type(tFile) ~= "table" then
+    if  (type(tFile) ~= "table") then
         return false
     end
 
     for k, v in pairs(tFile) do
         local ty_v = type(v)
-        if type(k) == "string" and (ty_v == "string" or ty_v == "number" or ty_v == "boolean" or ty_v == "table") then
+        if  (   (type(k) == "string")
+            and (  (ty_v == "string")
+                or (ty_v == "number")
+                or (ty_v == "boolean")
+                or (ty_v == "table") -- XXXX valid_types[ty_v]
+            )   )
+        then
             local opt = details[k]
-            if not opt or not opt.type or ty_v == opt.type then
+            if  (  not opt
+                or not opt.type
+                or (ty_v == opt.type)
+                ) then
                 -- This may fail if the table is recursive (or otherwise cannot be serialized).
                 local ok, v = pcall(reserialize, v)
-                if ok then set_value(k, v) end
+                if  ok then
+                    set_value(k, v)
+                end
             end
         end
     end
@@ -260,10 +285,10 @@ end
 --
 -- @see settings.load
 -- @changed 1.87.0 `path` is now optional.
-function save(path)
+function settings.save(path)
     expect(1, path, "string", "nil")
     local file = fs.open(path or ".settings", "w")
-    if not file then
+    if  not file then
         return false
     end
 
@@ -272,3 +297,5 @@ function save(path)
 
     return true
 end
+
+return settings
