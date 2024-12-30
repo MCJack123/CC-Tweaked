@@ -5,7 +5,6 @@
 --- @module fs
 
 MAKEBOOTMESG("loading fs")
-MAKEBOOTMESG("fw:shell %s", tostring(shell))
 -- if no shell assume pwd at "/"
 
 local expect = dofile("rom/modules/main/cc/expect.lua")
@@ -44,6 +43,11 @@ local native = fs
 
 local fs = {}
 for k, v in pairs(native) do fs[k] = v end
+
+--[[
+function fs.combine
+fucntion fs.getDir
+]]
 
 --[[- Provides completion for a file or directory name, suitable for use with
 [`_G.read`].

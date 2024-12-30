@@ -83,15 +83,54 @@ do
 end
 
 -- Inject a stub for the old bit library
-_G.bit = {
-    bnot = bit32.bnot,
-    band = bit32.band,
-    bor = bit32.bor,
-    bxor = bit32.bxor,
-    brshift = bit32.arshift,
-    blshift = bit32.lshift,
-    blogic_rshift = bit32.rshift,
+_G.bit =
+{ bnot    = bit32.bnot
+, band    = bit32.band
+, bor     = bit32.bor
+, bxor    = bit32.bxor
+, brshift = bit32.arshift
+, blshift = bit32.lshift
+, blogic_rshift = bit32.rshift
 }
+
+--[[
+function os.getprocenv()
+    return env_table[coroutine.running()]
+end
+{ pwd = ""
+
+}
+
+mimic coroutine.create and wrap:
+
+local coroutine_create = coroutine.create
+function coroutine.create(func)
+    local co = coroutine_create(func)
+	env_table[co] = env_table[coroutine.running()]
+end
+
+function os.newproc(func) 
+    local co = coroutine_create(func)
+	env_table[co] = copy(env_table[coroutine.running()]) -- XXXX
+end
+
+function wrap(func)
+    local co = coroutine.create(func)
+	return function (...)
+	    local ex = {resume(co, ...)}
+		if  ex[1] then
+		    return unpack(ex, 2)
+		end
+		error(ex[2], 2)
+	end
+end
+
+os.run(coroutine.create(func), ...) -- as func(...), part of shell
+
+
+os.create(func)
+
+]]
 
 -- Install lua parts of the os api
 function os.version()

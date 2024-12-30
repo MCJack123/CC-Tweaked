@@ -88,7 +88,7 @@ while running do
         chunk_map[name] = { contents = input, offset = offset }
         chunk_idx = chunk_idx + 1
 
-        local results = table.pack(exception.try(func))
+        local results = table.pack(exception.try(coroutine.create(func)))
         if results[1] then
             for i = 2, results.n do
                 local value = results[i]
@@ -104,7 +104,8 @@ while running do
             end
         else
             printError(results[2])
-            require "cc.internal.exception".report(results[2], results[3], chunk_map)
+            exception.report(results[2], results[3], chunk_map)
+			--XXXX require "cc.internal.exception".report(results[2], results[3], chunk_map)
         end
     else
         local parser = require "cc.internal.syntax"

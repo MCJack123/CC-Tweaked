@@ -51,7 +51,7 @@ if multishell then
 end
 
 local bExit = false
-local sDir = parentShell and parentShell.dir() or ""
+local sDir = parentShell and parentShell.dir() or "/"
 local sPath = parentShell and parentShell.path() or ".:/rom/programs"
 local tAliases = parentShell and parentShell.aliases() or {}
 local tCompletionInfo = parentShell and parentShell.getCompletionInfo() or {}
@@ -178,7 +178,9 @@ local function executeProgram(remainingRecursion, path, args)
         end
     end
 
-    local ok, err, co = exception.try(func, table.unpack(args, 1, args.n))
+    MAKEBOOTMESG("shell slander exception %s", coroutine.running())
+    local co = coroutine.create(func)
+	local ok, err = exception.try(co, table.unpack(args, 1, args.n))
 
     if ok then return true end
 
@@ -235,7 +237,7 @@ function shell.execute(command, ...)
             end
         end
         return result
-       else
+    else
         printError("No such program")
         return false
     end
@@ -260,7 +262,8 @@ end
 function shell.run(...)
     local tWords = tokenise(...)
     local sCommand = tWords[1]
-    if sCommand then
+	
+	if sCommand then
         return shell.execute(sCommand, table.unpack(tWords, 2))
     end
     return false
@@ -297,7 +300,7 @@ function shell.setDir(dir)
     if not fs.isDir(dir) then
         error("Not a directory", 2)
     end
-    sDir = fs.combine(dir, "")
+    sDir = fs.combine(dir)
 end
 
 --- Set the path where programs are located.

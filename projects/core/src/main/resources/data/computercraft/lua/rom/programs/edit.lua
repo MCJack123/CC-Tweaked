@@ -59,7 +59,8 @@ local contents, name = %q, %q
 local fn, err = load(contents, name, nil, _ENV)
 if fn then
     local exception = require "cc.internal.exception"
-    local ok, err, co = exception.try(fn, ...)
+    local co = coroutine.create(fn)
+	local ok, err = exception.try(co, ...)
 
     term.redirect(current)
     term.setTextColor(term.isColour() and colours.yellow or colours.white)

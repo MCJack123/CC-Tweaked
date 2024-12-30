@@ -323,10 +323,10 @@ end
 -- Begin
 parentTerm.clear()
 setMenuVisible(false)
-launchProcess(true, {
-    ["shell"] = shell,
-    ["multishell"] = multishell,
-}, "/rom/programs/shell.lua")
+launchProcess(true
+             , { ["shell"] = shell, ["multishell"] = multishell }
+			 , "/rom/programs/shell.lua"
+			 )
 
 -- Run processes
 while #tProcesses > 0 do

@@ -76,10 +76,9 @@ end
 @return[2] The error message
 @treturn[2] coroutine The thread where the error occurred.
 ]]
-local function try(func, ...)
-    expect(1, func, "function")
+local function try(co, ...)
+    expect(1, co, "thread")
 
-    local co = coroutine.create(func)
     local result = table.pack(coroutine.resume(co, ...))
 
     while coroutine.status(co) ~= "dead" do
@@ -95,7 +94,7 @@ local function try(func, ...)
         local exn = result[2]
         return false, rawget(exn, "message"), rawget(exn, "thread")
     else
-        return false, result[2], co
+        return false, result[2]
     end
 end
 
