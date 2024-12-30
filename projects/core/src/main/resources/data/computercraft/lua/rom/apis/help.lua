@@ -51,7 +51,7 @@ function help.lookup(topic)
         path = fs.combine(path, topic)
         for _, extension in ipairs(extensions) do
             local file = path .. extension
-            if fs.exists(file) and not fs.isDir(file) then
+            if  (fs.exists(file) and not fs.isDir(file)) then
                 return file
             end
         end
@@ -67,25 +67,25 @@ end
 -- @usage help.topics()
 function help.topics()
     -- Add index
-    local tItems = {
-        ["index"] = true,
-    }
+    local tItems = { ["index"] = true }
 
     -- Add topics from the path
     for sPath in string.gmatch(sPath, "[^:]+") do
-        if fs.isDir(sPath) then
+        if  fs.isDir(sPath) then
             local tList = fs.list(sPath)
             for _, sFile in pairs(tList) do
-                if string.sub(sFile, 1, 1) ~= "." then
-                    if not fs.isDir(fs.combine(sPath, sFile)) then
-                        for i = 2, #extensions do
-                            local extension = extensions[i]
-                            if #sFile > #extension and sFile:sub(-#extension) == extension then
-                                sFile = sFile:sub(1, -#extension - 1)
-                            end
+                if  (   (string.sub(sFile, 1, 1) ~= ".")
+				    and not fs.isDir(fs.combine(sPath, sFile))
+					) then
+                    for i = 2, #extensions do
+                        local extension = extensions[i]
+                        if  (   (#sFile > #extension)
+						    and (sFile:sub(-#extension) == extension)
+							) then
+                            sFile = sFile:sub(1, -#extension - 1)
                         end
-                        tItems[sFile] = true
                     end
+                    tItems[sFile] = true
                 end
             end
         end
@@ -112,7 +112,7 @@ function help.completeTopic(sText)
     local tResults = {}
     for n = 1, #tTopics do
         local sTopic = tTopics[n]
-        if #sTopic > #sText and string.sub(sTopic, 1, #sText) == sText then
+        if  ((#sTopic > #sText) and (string.sub(sTopic, 1, #sText) == sText)) then
             table.insert(tResults, string.sub(sTopic, #sText + 1))
         end
     end

@@ -12,23 +12,26 @@ local expect = dofile("rom/modules/main/cc/expect.lua")
 local expect, field = expect.expect, expect.field
 
 --[[
-makeDir
-getCapacity
-copy
-attributes
-list
-getSize
-delete
-getDrive
-getFreeSpace
-getName
-isReadOnly
-exists
-move
+makeDir(path)
+getCapacity(path)
+attributes(path)
+list(path)
+getSize(path)
+delete(path)
+getDrive(path)
+getFreeSpace(path)
+getName(path)
+isReadOnly(path)
+exists(path)
+isDir(path)
+getDir(path)
+
+open(path, mode)
+move(src, dest)
+copy(src, dest)
+
+
 combine
-isDir
-getDir
-open
 
 fs.find
 

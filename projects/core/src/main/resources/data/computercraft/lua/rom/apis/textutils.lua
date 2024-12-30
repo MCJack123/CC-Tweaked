@@ -354,16 +354,22 @@ local function serialize_impl(t, tracking, indent, opts)
     local seen_keys = {}
     for k, v in inext, t do
         seen_keys[k] = true
-        result = result .. sub_indent .. serialize_impl(v, tracking, sub_indent, opts) .. comma
+        result = result
+		      .. sub_indent
+			  .. serialize_impl(v, tracking, sub_indent, opts)
+			  .. comma
     end
     for k, v in next, t do
-        if not seen_keys[k] then
+        if  not seen_keys[k] then
             local sEntry
             if  (   (type(k) == "string")
                 and not g_tLuaKeywords[k]
                 and string.match(k, "^[%a_][%a%d_]*$")
                 ) then
-                sEntry = k .. equal .. serialize_impl(v, tracking, sub_indent, opts) .. comma
+                sEntry = k
+				      .. equal
+					  .. serialize_impl(v, tracking, sub_indent, opts)
+					  .. comma
             else
                 sEntry = open_key
                       .. serialize_impl(k, tracking, sub_indent, opts)
@@ -471,7 +477,6 @@ local function serializeJSONImpl(t, tracking, options)
         return tostring(t)
     elseif(sType ~= "table") then
         error("Cannot serialize type " .. sType, 0)
-
     end
     -- sType == "table"
     if  (tracking[t] ~= nil) then
@@ -504,9 +509,11 @@ local function serializeJSONImpl(t, tracking, options)
         if  (type(k) == "string") then
             local sEntry
             if  bNBTStyle then
-                sEntry = tostring(k) .. ":" .. serializeJSONImpl(v, tracking, options)
+                sEntry = tostring(k) .. ":"
+				      .. serializeJSONImpl(v, tracking, options)
             else
-                sEntry = serializeJSONString(k, options) .. ":" .. serializeJSONImpl(v, tracking, options)
+                sEntry = serializeJSONString(k, options) .. ":"
+				      .. serializeJSONImpl(v, tracking, options)
             end
             if  (nObjectSize == 0) then
                 sObjectResult = sObjectResult .. sEntry

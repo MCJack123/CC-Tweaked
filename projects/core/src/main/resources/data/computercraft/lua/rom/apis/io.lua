@@ -15,7 +15,9 @@ local expect = dofile("rom/modules/main/cc/expect.lua").expect
 --- If we return nil then close the file, as we've reached the end.
 -- We use this weird wrapper function as we wish to preserve the varargs
 local function checkResult(handle, ...)
-    if ... == nil and handle._autoclose and not handle._closed then handle:close() end
+    if  ((...) == nil) and handle._autoclose and not handle._closed then
+	    handle:close()
+	end
     return ...
 end
 
@@ -48,7 +50,7 @@ handleMetatable = {
             if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if handle.close then
+            if  handle.close then
                 self._closed = true
                 handle.close()
                 return true
@@ -64,10 +66,10 @@ handleMetatable = {
             if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
                 error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if handle.flush then handle.flush() end
+            if  handle.flush then handle.flush() end
             return true
         end,
 
@@ -99,14 +101,14 @@ handleMetatable = {
             if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
                 error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if not handle.read then return nil, "file is not readable" end
+            if  not handle.read then return nil, "file is not readable" end
 
             local args = table.pack(...)
             return function()
-                if self._closed then error("file is already closed", 2) end
+                if  self._closed then error("file is already closed", 2) end
                 return checkResult(self, self:read(table.unpack(args, 1, args.n)))
             end
         end,
@@ -132,10 +134,12 @@ handleMetatable = {
             if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
                 error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if  not handle.read and not handle.readLine then return nil, "Not opened for reading" end
+            if  (not handle.read and not handle.readLine) then
+			    return nil, "Not opened for reading"
+			end
 
             local n = select("#", ...)
             local output = {}
@@ -143,17 +147,19 @@ handleMetatable = {
                 local arg = select(i, ...)
                 local res
                 if  (type(arg) == "number") then
-                    if handle.read then res = handle.read(arg) end
+                    if  handle.read then
+					    res = handle.read(arg)
+					end
                 elseif(type(arg) == "string") then
                     local format = arg:gsub("^%*", ""):sub(1, 1)
 
-                    if format == "l" then
+                    if  (format == "l") then
                         if handle.readLine then res = handle.readLine() end
-                    elseif format == "L" and handle.readLine then
+                    elseif((format == "L") and handle.readLine) then
                         if handle.readLine then res = handle.readLine(true) end
-                    elseif format == "a" then
+                    elseif(format == "a") then
                         if handle.readAll then res = handle.readAll() or "" end
-                    elseif format == "n" then
+                    elseif(format == "n") then
                         res = nil -- Skip this format as we can't really handle it
                     else
                         error("bad argument #" .. i .. " (invalid format)", 2)
@@ -163,11 +169,13 @@ handleMetatable = {
                 end
 
                 output[i] = res
-                if not res then break end
+                if  not res then break end
             end
 
             -- Default to "l" if possible
-            if  ((n == 0) and handle.readLine) then return handle.readLine() end
+            if  ((n == 0) and handle.readLine) then
+			    return handle.readLine()
+			end
             return table.unpack(output, 1, n)
         end,
 
@@ -192,10 +200,10 @@ handleMetatable = {
             if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
                 error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if not handle.seek then return nil, "file is not seekable" end
+            if  not handle.seek then return nil, "file is not seekable" end
 
             -- It's a tail call, so error positions are preserved
             return handle.seek(whence, offset)
@@ -223,10 +231,10 @@ handleMetatable = {
             if  ((type(self) ~= "table") or (getmetatable(self) ~= handleMetatable)) then  -- XXXX
                 error("bad argument #1 (FILE expected, got " .. type(self) .. ")", 2)
             end
-            if self._closed then error("attempt to use a closed file", 2) end
+            if  self._closed then error("attempt to use a closed file", 2) end
 
             local handle = self._handle
-            if not handle.write then return nil, "file is not writable" end
+            if  not handle.write then return nil, "file is not writable" end
 
             for i = 1, select("#", ...) do
                 local arg = select(i, ...)
@@ -243,18 +251,18 @@ local function make_file(handle)
 end
 
 local defaultInput = make_file({ readLine = _G.read })
-
 local defaultOutput = make_file({ write = _G.write })
-
 local defaultError = make_file({
     write = function(...)
         local oldColour
-        if term.isColour() then
+        if  term.isColour() then
             oldColour = term.getTextColour()
             term.setTextColour(colors.red)
         end
         _G.write(...)
-        if term.isColour() then term.setTextColour(oldColour) end
+        if  term.isColour() then
+		    term.setTextColour(oldColour)
+		end
     end,
 })
 
@@ -312,7 +320,7 @@ end
 function io.input(file)
     if  (type(file) == "string") then
         local res, err = io.open(file, "r")
-        if not res then error(err, 2) end
+        if  not res then error(err, 2) end
         currentInput = res
     elseif((type(file) == "table") and (getmetatable(file) == handleMetatable)) then  -- XXXX
         currentInput = file

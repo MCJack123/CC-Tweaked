@@ -140,7 +140,7 @@ function peripheral.isPresent(name)
     end
 
     for _, side in ipairs(sides) do
-        if  ( native.hasType(side, "peripheral_hub")
+        if  (   native.hasType(side, "peripheral_hub")
             and native.call(side, "isPresentRemote", name)
             ) then
             return true
@@ -176,7 +176,7 @@ function peripheral.getType(periph)
         return nil
     else
         local mt = getmetatable(periph)
-        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then
+        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then -- XXXX
             error("bad argument #1 (table is not a peripheral)", 2)
         end
         return table.unpack(mt.types)
@@ -208,7 +208,7 @@ function peripheral.hasType(periph, periph_type)
         return nil
     else
         local mt = getmetatable(periph)
-        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then
+        if  (not mt or (mt.__name ~= "peripheral") or (type(mt.types) ~= "table")) then -- XXXX
             error("bad argument #1 (table is not a peripheral)", 2)
         end
         return mt.types[periph_type] ~= nil
@@ -243,7 +243,7 @@ end
 function peripheral.getName(periph)
     expect(1, periph, "table")
     local mt = getmetatable(periph)
-    if  (not mt or (mt.__name ~= "peripheral") or (type(mt.name) ~= "string")) then
+    if  (not mt or (mt.__name ~= "peripheral") or (type(mt.name) ~= "string")) then -- XXXX
         error("bad argument #1 (table is not a peripheral)", 2)
     end
     return mt.name
@@ -299,12 +299,12 @@ function peripheral.wrap(name)
     for i = 1, #types do
         types[types[i]] = true
     end
-    local result = setmetatable({}, {
-        __name = "peripheral",
-        name = name,
-        type = types[1],
-        types = types,
-    })
+    local result = setmetatable({}, { __name = "peripheral"
+                                    , name = name
+                                    , type = types[1]
+                                    , types = types
+                                    }
+							   )
     for _, method in ipairs(methods) do
         result[method] = function(...)
             return peripheral.call(name, method, ...)

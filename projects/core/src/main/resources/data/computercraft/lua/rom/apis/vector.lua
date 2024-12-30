@@ -45,11 +45,11 @@ local vector = {
     --- Adds two vectors together.
     --
     -- @tparam Vector self The first vector to add.
-    -- @tparam Vector o The second vector to add.
+    -- @tparam Vector other The second vector to add.
     -- @treturn Vector The resulting vector
     -- @usage v1:add(v2)
     -- @usage v1 + v2
-    add = function(self, o)
+    add = function(self, other)
         if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
         if  (getmetatable(other) ~= vmetatable) then expect(2, other, "vector") end
 
@@ -62,7 +62,7 @@ local vector = {
     --- Subtracts one vector from another.
     --
     -- @tparam Vector self The vector to subtract from.
-    -- @tparam Vector o The vector to subtract.
+    -- @tparam Vector other The vector to subtract.
     -- @treturn Vector The resulting vector
     -- @usage v1:sub(v2)
     -- @usage v1 - v2
@@ -127,8 +127,8 @@ local vector = {
     --- Compute the dot product of two vectors
     --
     -- @tparam Vector self The first vector to compute the dot product of.
-    -- @tparam Vector o The second vector to compute the dot product of.
-    -- @treturn Vector The dot product of `self` and `o`.
+    -- @tparam Vector other The second vector to compute the dot product of.
+    -- @treturn Vector The dot product of `self` and `other`.
     -- @usage v1:dot(v2)
     dot = function(self, other)
         if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end
@@ -142,8 +142,8 @@ local vector = {
     --- Compute the cross product of two vectors
     --
     -- @tparam Vector self The first vector to compute the cross product of.
-    -- @tparam Vector o The second vector to compute the cross product of.
-    -- @treturn Vector The cross product of `self` and `o`.
+    -- @tparam Vector other The second vector to compute the cross product of.
+    -- @treturn Vector The cross product of `self` and `other`.
     -- @usage v1:cross(v2)
     cross = function(self, other)
         if  (getmetatable(self ) ~= vmetatable) then expect(1, self , "vector") end

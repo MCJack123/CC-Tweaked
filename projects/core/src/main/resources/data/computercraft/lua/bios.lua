@@ -587,7 +587,7 @@ function os.loadAPI(_sPath)
     local fnAPI, err = loadfile(_sPath, nil, tEnv)
     if  not fnAPI then
         tAPIsLoading[sName] = nil
-        return error(("Failed to load API " .. sName .. ": " .. err):sub(80), 1)
+        return error("Failed to load API " .. sName .. ": " .. err, 1)
     end
     local ok, tAPI = pcall(fnAPI)
     if  not ok then
@@ -681,7 +681,7 @@ if  (commands and fs.isDir("rom/apis/command")) then
                 return nil
             end,
         }
-        setmetatable(commands, tCaseInsensitiveMetatable)
+        setmetatable(commands      , tCaseInsensitiveMetatable)
         setmetatable(commands.async, tCaseInsensitiveMetatable)
 
         -- Add global "exec" function

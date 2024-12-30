@@ -4,7 +4,7 @@
 
 --- @module turtle
 
-if not turtle then
+if  not turtle then
     error("Cannot load turtle API on computer", 2)
 end
 

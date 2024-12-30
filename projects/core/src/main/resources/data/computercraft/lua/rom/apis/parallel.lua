@@ -44,7 +44,7 @@ local function create(...)
     local tCos = {}
     for i = 1, tFns.n, 1 do
         local fn = tFns[i]
-        if type(fn) ~= "function" then
+        if  (type(fn) ~= "function") then
             error("bad argument #" .. i .. " (function expected, got " .. type(fn) .. ")", 3)
         end
 
@@ -56,7 +56,7 @@ end
 
 local function runUntilLimit(_routines, _limit)
     local count = #_routines
-    if count < 1 then return 0 end
+    if  (count < 1) then return 0 end
     local living = count
 
     local tFilters = {}
@@ -64,30 +64,33 @@ local function runUntilLimit(_routines, _limit)
     while true do
         for n = 1, count do
             local r = _routines[n]
-            if r then
-                if tFilters[r] == nil or tFilters[r] == eventData[1] or eventData[1] == "terminate" then
-                    local ok, param = coroutine.resume(r, table.unpack(eventData, 1, eventData.n))
-                    if not ok then
-                        error(param, 0)
-                    else
-                        tFilters[r] = param
-                    end
-                    if coroutine.status(r) == "dead" then
-                        _routines[n] = nil
-                        living = living - 1
-                        if living <= _limit then
-                            return n
-                        end
+            if  (   r 
+                and (  (tFilters[r] == nil)
+                    or (tFilters[r] == eventData[1])
+                    or (eventData[1] == "terminate")
+                )   )
+            then
+                local ok, param = coroutine.resume(r, table.unpack(eventData, 1, eventData.n))
+                if  not ok then
+                    error(param, 0)
+                else
+                    tFilters[r] = param
+                end
+                if  (coroutine.status(r) == "dead") then
+                    _routines[n] = nil
+                    living = living - 1
+                    if  (living <= _limit) then
+                        return n
                     end
                 end
             end
         end
         for n = 1, count do
             local r = _routines[n]
-            if r and coroutine.status(r) == "dead" then
+            if  (r and (coroutine.status(r) == "dead")) then
                 _routines[n] = nil
                 living = living - 1
-                if living <= _limit then
+                if  (living <= _limit) then
                     return n
                 end
             end

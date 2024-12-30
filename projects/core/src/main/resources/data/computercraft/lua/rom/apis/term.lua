@@ -80,7 +80,6 @@ end
 -- @treturn Redirect The native terminal redirect.
 -- @since 1.6
 function term.native()
-    MAKEBOOTMESG("loading term 2?")
     return native
 end
 

@@ -14,24 +14,24 @@ local expect = dofile("rom/modules/main/cc/expect.lua").expect
 local native = http
 local nativeHTTPRequest = native.request
 
-local methods = {
-    GET = true, POST = true, HEAD = true,
-    OPTIONS = true, PUT = true, DELETE = true,
-    PATCH = true, TRACE = true,
+local methods =
+{ GET = true, POST = true, HEAD = true
+, OPTIONS = true, PUT = true, DELETE = true
+, PATCH = true, TRACE = true
 }
 
 local function check_key(options, key, ty, opt)
     local value = options[key]
     local valueTy = type(value)
 
-    if (value ~= nil or not opt) and valueTy ~= ty then
+    if  ((value ~= nil) or not opt) and (valueTy ~= ty) then
         error(("bad field '%s' (%s expected, got %s"):format(key, ty, valueTy), 4)
     end
 end
 
 local function check_request_options(options, body)
     check_key(options, "url", "string")
-    if body == false then
+    if  (body == false) then
         check_key(options, "body", "nil")
     else
         check_key(options, "body", "string", not body)
@@ -41,21 +41,23 @@ local function check_request_options(options, body)
     check_key(options, "redirect", "boolean", true)
     check_key(options, "timeout", "number", true)
 
-    if options.method and not methods[options.method] then
+    if  (options.method and not methods[options.method]) then
         error("Unsupported HTTP method", 3)
     end
 end
 
 local function wrap_request(_url, ...)
     local ok, err = nativeHTTPRequest(...)
-    if ok then
+    if  ok then
         while true do
             local event, param1, param2, param3 = os.pullEvent()
-            if event == "http_success" and param1 == _url then
-                return param2
-            elseif event == "http_failure" and param1 == _url then
-                return nil, param2, param3
-            end
+            if  (param1 == _url) then
+			    if  (event == "http_success") then
+                    return param2
+                elseif(event == "http_failure") then
+                    return nil, param2, param3
+                end
+			end
         end
     end
     return nil, err
@@ -104,7 +106,7 @@ request.close()
 ```
 ]]
 function http.get(_url, _headers, _binary)
-    if type(_url) == "table" then
+    if  (type(_url) == "table") then
         check_request_options(_url, false)
         return wrap_request(_url.url, _url)
     end
@@ -148,7 +150,7 @@ error or connection timeout.
                  than decoding from UTF-8.
 ]]
 function http.post(_url, _post, _headers, _binary)
-    if type(_url) == "table" then
+    if  (type(_url) == "table") then
         check_request_options(_url, true)
         return wrap_request(_url.url, _url)
     end
@@ -202,7 +204,7 @@ from above are passed in as fields instead (for instance,
 ]]
 function http.request(_url, _post, _headers, _binary)
     local url
-    if type(_url) == "table" then
+    if  (type(_url) == "table") then
         check_request_options(_url)
         url = _url.url
     else
@@ -214,7 +216,7 @@ function http.request(_url, _post, _headers, _binary)
     end
 
     local ok, err = nativeHTTPRequest(_url, _post, _headers, _binary)
-    if not ok then
+    if  not ok then
         os.queueEvent("http_failure", url, err)
     end
 
@@ -266,11 +268,11 @@ print(http.checkURL("not a url"))
 function http.checkURL(_url)
     expect(1, _url, "string")
     local ok, err = nativeCheckURL(_url)
-    if not ok then return ok, err end
+    if  not ok then return ok, err end
 
     while true do
         local _, url, ok, err = os.pullEvent("http_check")
-        if url == _url then return ok, err end
+        if  (url == _url) then return ok, err end
     end
 end
 
@@ -308,7 +310,7 @@ these options behave.
 ]]
 function http.websocketAsync(url, headers)
     local actual_url
-    if type(url) == "table" then
+    if  (type(url) == "table") then
         check_websocket_options(url)
         actual_url = url.url
     else
@@ -318,7 +320,7 @@ function http.websocketAsync(url, headers)
     end
 
     local ok, err = nativeWebsocket(url, headers)
-    if not ok then
+    if  not ok then
         os.queueEvent("websocket_failure", actual_url, err)
     end
 
@@ -366,7 +368,7 @@ from above are passed in as fields instead (for instance,
 ]]
 function http.websocket(url, headers)
     local actual_url
-    if type(url) == "table" then
+    if  (type(url) == "table") then
         check_websocket_options(url)
         actual_url = url.url
     else
@@ -376,15 +378,17 @@ function http.websocket(url, headers)
     end
 
     local ok, err = nativeWebsocket(url, headers)
-    if not ok then return ok, err end
+    if  not ok then return ok, err end
 
     while true do
         local event, url, param = os.pullEvent( )
-        if event == "websocket_success" and url == actual_url then
-            return param
-        elseif event == "websocket_failure" and url == actual_url then
-            return false, param
-        end
+        if  (url == actual_url) then
+		    if  (event == "websocket_success") then
+                return param
+            elseif(event == "websocket_failure") then
+                return false, param
+            end
+		end
     end
 end
 

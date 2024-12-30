@@ -66,7 +66,7 @@ local function parse_color(color)
         return expect(1, color, "number")
     end
 
-    if  ((color < 0) or (color > 0xffff)) then
+    if  ((0 > color) or (color > 0xffff)) then
         error("Colour out of range", 3)
     end
     return 2 ^ math.floor(math.log(color, 2))
@@ -143,11 +143,11 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
     local tLines = {}
     local tPalette = {}
     do
-        local sEmptyText = sEmptySpaceLine
+        local sEmptyText      = sEmptySpaceLine
         local sEmptyTextColor = tEmptyColorLines[nTextColor]
-        local sEmptyBackgroundColor = tEmptyColorLines[nBackgroundColor]
+        local sEmptyBgColor   = tEmptyColorLines[nBackgroundColor]
         for y = 1, nHeight do
-            tLines[y] = { sEmptyText, sEmptyTextColor, sEmptyBackgroundColor }
+            tLines[y] = { sEmptyText, sEmptyTextColor, sEmptyBgColor }
         end
 
         for i = 0, 15 do
@@ -193,7 +193,7 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
         end
     end
 
-    local function internalBlit(sText, sTextColor, sBackgroundColor)
+    local function internalBlit(sText, sTextColor, sBgColor)
         local nStart = nCursorX
         local nEnd = nStart + #sText - 1
         if  (   (1 <= nCursorY) and (nCursorY <= nHeight)
@@ -204,50 +204,50 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
             if  ((nStart == 1) and (nEnd == nWidth)) then
                 tLine[1] = sText
                 tLine[2] = sTextColor
-                tLine[3] = sBackgroundColor
+                tLine[3] = sBgColor
             else
-                local sClippedText, sClippedTextColor, sClippedBackgroundColor
+                local sClippedText, sClippedTextColor, sClippedBgColor
                 if  (nStart < 1) then
                     local nClipStart = 1 - nStart + 1
                     local nClipEnd = nWidth - nStart + 1
-                    sClippedText            = string_sub(sText           , nClipStart, nClipEnd)
-                    sClippedTextColor       = string_sub(sTextColor      , nClipStart, nClipEnd)
-                    sClippedBackgroundColor = string_sub(sBackgroundColor, nClipStart, nClipEnd)
+                    sClippedText      = string_sub(sText     , nClipStart, nClipEnd)
+                    sClippedTextColor = string_sub(sTextColor, nClipStart, nClipEnd)
+                    sClippedBgColor   = string_sub(sBgColor  , nClipStart, nClipEnd)
                 elseif(nEnd > nWidth) then
                     local nClipEnd = nWidth - nStart + 1
-                    sClippedText            = string_sub(sText           , 1, nClipEnd)
-                    sClippedTextColor       = string_sub(sTextColor      , 1, nClipEnd)
-                    sClippedBackgroundColor = string_sub(sBackgroundColor, 1, nClipEnd)
+                    sClippedText      = string_sub(sText     , 1, nClipEnd)
+                    sClippedTextColor = string_sub(sTextColor, 1, nClipEnd)
+                    sClippedBgColor   = string_sub(sBgColor  , 1, nClipEnd)
                 else
-                    sClippedText            = sText
-                    sClippedTextColor       = sTextColor
-                    sClippedBackgroundColor = sBackgroundColor
+                    sClippedText      = sText
+                    sClippedTextColor = sTextColor
+                    sClippedBgColor   = sBgColor
                 end
 
-                local sOldText            = tLine[1]
-                local sOldTextColor       = tLine[2]
-                local sOldBackgroundColor = tLine[3]
-                local sNewText, sNewTextColor, sNewBackgroundColor
+                local sOldText      = tLine[1]
+                local sOldTextColor = tLine[2]
+                local sOldBgColor   = tLine[3]
+                local sNewText, sNewTextColor, sNewBgColor
                 if  (nStart > 1) then
                     local nOldEnd = nStart - 1
-                    sNewText            = string_sub(sOldText           , 1, nOldEnd) .. sClippedText
-                    sNewTextColor       = string_sub(sOldTextColor      , 1, nOldEnd) .. sClippedTextColor
-                    sNewBackgroundColor = string_sub(sOldBackgroundColor, 1, nOldEnd) .. sClippedBackgroundColor
+                    sNewText      = string_sub(sOldText     , 1, nOldEnd) .. sClippedText
+                    sNewTextColor = string_sub(sOldTextColor, 1, nOldEnd) .. sClippedTextColor
+                    sNewBgColor   = string_sub(sOldBgColor  , 1, nOldEnd) .. sClippedBgColor
                 else
-                    sNewText            = sClippedText
-                    sNewTextColor       = sClippedTextColor
-                    sNewBackgroundColor = sClippedBackgroundColor
+                    sNewText      = sClippedText
+                    sNewTextColor = sClippedTextColor
+                    sNewBgColor   = sClippedBgColor
                 end
                 if  (nEnd < nWidth) then
                     local nOldStart = nEnd + 1
-                    sNewText            = sNewText            .. string_sub(sOldText           , nOldStart, nWidth)
-                    sNewTextColor       = sNewTextColor       .. string_sub(sOldTextColor      , nOldStart, nWidth)
-                    sNewBackgroundColor = sNewBackgroundColor .. string_sub(sOldBackgroundColor, nOldStart, nWidth)
+                    sNewText      = sNewText      .. string_sub(sOldText     , nOldStart, nWidth)
+                    sNewTextColor = sNewTextColor .. string_sub(sOldTextColor, nOldStart, nWidth)
+                    sNewBgColor   = sNewBgColor   .. string_sub(sOldBgColor  , nOldStart, nWidth)
                 end
 
                 tLine[1] = sNewText
                 tLine[2] = sNewTextColor
-                tLine[3] = sNewBackgroundColor
+                tLine[3] = sNewBgColor
             end
 
             -- Redraw line
@@ -279,27 +279,27 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
                     )
     end
 
-    function window.blit(sText, sTextColor, sBackgroundColor)
-        expect(1, sText           , "string")
-        expect(2, sTextColor      , "string")
-        expect(3, sBackgroundColor, "string")
-        if  ((#sTextColor ~= #sText) or (#sBackgroundColor ~= #sText)) then
+    function window.blit(sText, sTextColor, sBgColor)
+        expect(1, sText     , "string")
+        expect(2, sTextColor, "string")
+        expect(3, sBgColor  , "string")
+        if  ((#sTextColor ~= #sText) or (#sBgColor ~= #sText)) then
             error("Arguments must be the same length", 2)
         end
-        sTextColor       = sTextColor      :lower()
-        sBackgroundColor = sBackgroundColor:lower()
-        internalBlit(sText, sTextColor, sBackgroundColor)
+        sTextColor = sTextColor:lower()
+        sBgColor   = sBgColor  :lower()
+        internalBlit(sText, sTextColor, sBgColor)
     end
 
     function window.clear()
-        local sEmptyText            = sEmptySpaceLine
-        local sEmptyTextColor       = tEmptyColorLines[nTextColor]
-        local sEmptyBackgroundColor = tEmptyColorLines[nBackgroundColor]
+        local sEmptyText      = sEmptySpaceLine
+        local sEmptyTextColor = tEmptyColorLines[nTextColor]
+        local sEmptyBgColor   = tEmptyColorLines[nBackgroundColor]
         for y = 1, nHeight do
             local line = tLines[y]
             line[1] = sEmptyText
             line[2] = sEmptyTextColor
-            line[3] = sEmptyBackgroundColor
+            line[3] = sEmptyBgColor
         end
         if  bVisible then
             redraw()
@@ -309,7 +309,7 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
     end
 
     function window.clearLine()
-        if  (1 <= nCursorY) and (nCursorY <= nHeight) then
+        if  ((1 <= nCursorY) and (nCursorY <= nHeight)) then
             local line = tLines[nCursorY]
             line[1] = sEmptySpaceLine
             line[2] = tEmptyColorLines[nTextColor]
@@ -412,11 +412,13 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
     window.getPaletteColour = window.getPaletteColor
 
     local function setBackgroundColor(color)
-        if tHex[color] == nil then color = parse_color(color) end
+        if  (tHex[color] == nil) then
+		    color = parse_color(color)
+		end
         nBackgroundColor = color
     end
 
-    window.setBackgroundColor = setBackgroundColor
+    window.setBackgroundColor  = setBackgroundColor
     window.setBackgroundColour = setBackgroundColor
 
     function window.getSize()
@@ -427,15 +429,15 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
         expect(1, n, "number")
         if  (n ~= 0) then
             local tNewLines = {}
-            local sEmptyText            = sEmptySpaceLine
-            local sEmptyTextColor       = tEmptyColorLines[nTextColor]
-            local sEmptyBackgroundColor = tEmptyColorLines[nBackgroundColor]
+            local sEmptyText      = sEmptySpaceLine
+            local sEmptyTextColor = tEmptyColorLines[nTextColor]
+            local sEmptyBgColor   = tEmptyColorLines[nBackgroundColor]
             for newY = 1, nHeight do
                 local y = newY + n
                 if  ((1 <= y) and (y <= nHeight)) then
                     tNewLines[newY] = tLines[y]
                 else
-                    tNewLines[newY] = { sEmptyText, sEmptyTextColor, sEmptyBackgroundColor }
+                    tNewLines[newY] = { sEmptyText, sEmptyTextColor, sEmptyBgColor }
                 end
             end
             tLines = tNewLines
@@ -570,12 +572,12 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
         if  (new_width and new_height) then
             local tNewLines = {}
             createEmptyLines(new_width)
-            local sEmptyText            = sEmptySpaceLine
-            local sEmptyTextColor       = tEmptyColorLines[nTextColor]
-            local sEmptyBackgroundColor = tEmptyColorLines[nBackgroundColor]
+            local sEmptyText      = sEmptySpaceLine
+            local sEmptyTextColor = tEmptyColorLines[nTextColor]
+            local sEmptyBgColor   = tEmptyColorLines[nBackgroundColor]
             for y = 1, new_height do
                 if  (y > nHeight) then
-                    tNewLines[y] = { sEmptyText, sEmptyTextColor, sEmptyBackgroundColor }
+                    tNewLines[y] = { sEmptyText, sEmptyTextColor, sEmptyBgColor }
                 else
                     local tOldLine = tLines[y]
                     if  (new_width == nWidth) then
@@ -588,9 +590,9 @@ function APIwindow.create(parent, nX, nY, nWidth, nHeight, bStartVisible)
                         }
                     else
                         tNewLines[y] =
-                        { tOldLine[1] .. string_sub(sEmptyText           , nWidth + 1, new_width)
-                        , tOldLine[2] .. string_sub(sEmptyTextColor      , nWidth + 1, new_width)
-                        , tOldLine[3] .. string_sub(sEmptyBackgroundColor, nWidth + 1, new_width)
+                        { tOldLine[1] .. string_sub(sEmptyText     , nWidth + 1, new_width)
+                        , tOldLine[2] .. string_sub(sEmptyTextColor, nWidth + 1, new_width)
+                        , tOldLine[3] .. string_sub(sEmptyBgColor  , nWidth + 1, new_width)
                         }
                     end
                 end
