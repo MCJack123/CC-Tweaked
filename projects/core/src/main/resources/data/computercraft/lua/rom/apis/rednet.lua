@@ -138,7 +138,7 @@ function rednet.isOpen(modem)
         -- Check if a specific modem is open
         if  (peripheral.getType(modem) == "modem") then
             return peripheral.call(modem, "isOpen", id_as_channel())
-               and peripheral.call(modem, "isOpen", CHANNEL_BROADCAST)
+               and peripheral.call(modem, "isOpen", rednet.CHANNEL_BROADCAST)
         end
     else
         -- Check if any modem is open

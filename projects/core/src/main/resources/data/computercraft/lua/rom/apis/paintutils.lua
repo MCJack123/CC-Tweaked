@@ -221,10 +221,11 @@ function paintutils.drawBox(startX, startY, endX, endY, nColour)
     local minX, maxX, minY, maxY = sortCoords(startX, startY, endX, endY)
     local width = maxX - minX + 1
 
+    local sText, sTextColor = (" "):rep(width), colourHex:rep(width)
     for y = minY, maxY do
         if  ((y == minY) or (y == maxY)) then
             term.setCursorPos(minX, y)
-            term.blit((" "):rep(width), colourHex:rep(width), colourHex:rep(width))
+            term.blit(sText, sTextColor, sTextColor)
         else
             term.setCursorPos(minX, y)
             term.blit(" ", colourHex, colourHex)
@@ -274,9 +275,10 @@ function paintutils.drawFilledBox(startX, startY, endX, endY, nColour)
     local minX, maxX, minY, maxY = sortCoords(startX, startY, endX, endY)
     local width = maxX - minX + 1
 
+    local sText, sTextColor = (" "):rep(width), colourHex:rep(width)
     for y = minY, maxY do
         term.setCursorPos(minX, y)
-        term.blit((" "):rep(width), colourHex:rep(width), colourHex:rep(width))
+        term.blit(sText, sTextColor, sTextColor)
     end
 end
 

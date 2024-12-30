@@ -563,13 +563,25 @@ function os.loadAPI(_sPath)
         return false
     end
     tAPIsLoading[sName] = true
-
+    
+    
+    local IGNORE_GIND =
+    { type = 1, ipairs = 1, pairs = 1, setmetatable = 1, getmetatable = 1, dofile = 1, math = 1
+    , MAKEBOOTMESG = 1, tostring = 1, tonumber = 1, select = 1
+    , coroutine = 1, string = 1, table = 1
+    }
+	local function INSPECT_index(tab, index)
+        if  not IGNORE_GIND[index] then
+            MAKEBOOTMESG("GET AT %s %d as %s", sName, debug.getinfo(2).currentline, index)
+        end
+        return _G[index]
+    end
     local tEnv = {}
     setmetatable(tEnv, { __index = _G
                        , __newindex = function (...)
-                                          MAKEBOOTMESG("SET AT %s %d", sName, debug.getinfo(2).currentline)
-                                          rawset(...)
-                                      end
+                             MAKEBOOTMESG("SET AT %s %d", sName, debug.getinfo(2).currentline)
+                             rawset(...)
+                         end
                        }
                 )
     local fnAPI, err = loadfile(_sPath, nil, tEnv)

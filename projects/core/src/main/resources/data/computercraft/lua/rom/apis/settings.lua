@@ -29,7 +29,7 @@ and then re-run the `example` program to check it has changed.
 ]]
 
 local expect = dofile("rom/modules/main/cc/expect.lua")
-local type, expect, field = type, expect.expect, expect.field
+local expect, field = expect.expect, expect.field
 
 local details, values = {}, {}
 
